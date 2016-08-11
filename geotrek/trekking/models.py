@@ -133,6 +133,22 @@ class Trek(StructureRelated, PicturesMixin, PublishableMixin, MapEntityMixin, To
     def __unicode__(self):
         return self.name
 
+    def get_map_image_extent(self, srid=settings.API_SRID):
+        extent1 = super(Trek, self).get_map_image_extent(srid)
+        geom = self.parking_location
+        if geom:
+            geom.transform(srid)
+            extent2 = geom.extent
+            extent = (
+                min(extent1[0], extent2[0]),
+                min(extent1[1], extent2[1]),
+                max(extent1[2], extent2[2]),
+                max(extent1[3], extent2[3]),
+            )
+        else:
+            extent = extent1
+        return extent
+
     @models.permalink
     def get_map_image_url(self):
         return ('trekking:trek_map_image', [], {'pk': str(self.pk), 'lang': get_language()})
