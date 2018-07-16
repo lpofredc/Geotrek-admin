@@ -136,7 +136,8 @@ class Command(BaseCommand):
 
                     model = 'S' if options.get('signage') else 'B'
 
-                    self.create_infrastructure(feature_geom, name, type, condition, structure, description, year, model, verbosity)
+                    self.create_infrastructure(feature_geom, name, type, condition, structure, description, year, model,
+                                               verbosity)
 
             transaction.savepoint_commit(sid)
             if verbosity >= 2:
@@ -151,17 +152,17 @@ class Command(BaseCommand):
 
         infra_type, created = InfrastructureType.objects.get_or_create(label=type, type=model)
 
-        if created and verbosity:
+        if created and verbosity >= 2:
             self.stdout.write(u"- InfrastructureType '{}' created".format(infra_type))
 
         condition_type, created = InfrastructureCondition.objects.get_or_create(label=condition)
 
-        if created and verbosity:
+        if created and verbosity >= 2:
             self.stdout.write(u"- Condition Type '{}' created".format(condition_type))
 
         structure, created = Structure.objects.get_or_create(name=structure)
 
-        if created and verbosity:
+        if created and verbosity >= 2:
             self.stdout.write(u"- Structure '{}' created".format(structure))
         with transaction.atomic():
             Model = Signage if model == 'S' else Infrastructure

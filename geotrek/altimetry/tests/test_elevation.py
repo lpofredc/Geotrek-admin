@@ -1,4 +1,3 @@
-from StringIO import StringIO
 from django.conf import settings
 from django.test import TestCase
 from django.db import connections, DEFAULT_DB_ALIAS
