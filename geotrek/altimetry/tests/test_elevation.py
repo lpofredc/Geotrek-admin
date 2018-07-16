@@ -337,3 +337,27 @@ class CommandLoadDemTest(TestCase):
         with self.assertRaises(CommandError) as e:
             call_command('loaddem', filename, verbosity=0)
         self.assertIn('DEM format is not recognized by GDAL.', e.exception)
+
+
+class TestUpdateGeom(TestCase):
+
+    step = settings.ALTIMETRIC_PROFILE_PRECISION
+
+    def test_update(self):
+        # Create a fake empty DEM to prevent trigger optimisation to skip sampling
+
+        path = Path.objects.create(geom=LineString((0, 0), (0, self.step * 2 + 1), (0, self.step * 4 + 2)))
+        self.assertEqual(len(path.geom_3d.coords), 3)
+        conn = connections[DEFAULT_DB_ALIAS]
+        cur = conn.cursor()
+        cur.execute('CREATE TABLE mnt (rid serial primary key, rast raster)')
+        cur.execute('INSERT INTO mnt (rast) VALUES (ST_MakeEmptyRaster(100, 125, 0, 125, 25, -25, 0, 0, %s))',
+                    [settings.SRID])
+        cur.execute('UPDATE mnt SET rast = ST_AddBand(rast, \'16BSI\')')
+        self.assertEqual(len(path.geom_3d.coords), 3)
+        call_command('update_geom')
+        self.assertEqual(len(path.geom_3d.coords), 7)
+
+    def test_no_update(self):
+        pass
+
