@@ -1,3 +1,4 @@
+from StringIO import StringIO
 from django.conf import settings
 from django.test import TestCase
 from django.db import connections, DEFAULT_DB_ALIAS
@@ -354,10 +355,15 @@ class TestUpdateGeom(TestCase):
         cur.execute('INSERT INTO mnt (rast) VALUES (ST_MakeEmptyRaster(100, 125, 0, 125, 25, -25, 0, 0, %s))',
                     [settings.SRID])
         cur.execute('UPDATE mnt SET rast = ST_AddBand(rast, \'16BSI\')')
+        path.reload()
         self.assertEqual(len(path.geom_3d.coords), 3)
-        call_command('update_geom')
+        call_command('update_geom', verbosity=1)
+        path.reload()
         self.assertEqual(len(path.geom_3d.coords), 7)
 
     def test_no_update(self):
-        pass
-
+        try:
+            call_command('update_geom')
+            raise BaseException
+        except CommandError as e:
+            self.assertIn("There is no DEM, the command won't do anything", e)
