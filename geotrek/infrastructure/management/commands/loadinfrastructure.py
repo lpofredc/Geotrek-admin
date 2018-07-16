@@ -136,7 +136,8 @@ class Command(BaseCommand):
 
                     model = 'S' if options.get('signage') else 'B'
 
-                    self.create_infrastructure(feature_geom, name, type, condition, structure, description, year, model, verbosity)
+                    self.create_infrastructure(feature_geom, name, type, condition, structure, description, year, model,
+                                               verbosity)
 
             transaction.savepoint_commit(sid)
             if verbosity >= 2:
