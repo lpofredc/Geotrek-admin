@@ -5,9 +5,9 @@ CHANGELOG
 2.22.2.dev0
 -------------------
 
-**Bug fixes**
+**Minor changes**
 
--
+* Avoid calculate altimetry when the geometry didn't change.
 
 
 2.22.1 (2018-11-27)
