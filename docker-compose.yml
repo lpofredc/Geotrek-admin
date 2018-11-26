@@ -3,7 +3,7 @@ services:
   postgres:
     image: makinacorpus/postgis:11-2.5
     ports:
-      - 5432
+      - "5432:5432"
     env_file:
       - .env
     volumes:
@@ -51,7 +51,6 @@ services:
        - .env
      volumes:
        - .:/app/src
-       - ../django-mapentity:/src/mapentity
      depends_on:
        - celery
      working_dir: /app/src
