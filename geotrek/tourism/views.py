@@ -1,7 +1,7 @@
 from itertools import chain
 import logging
 import os
-from urlparse import urljoin
+from urllib.parse import urljoin
 from django.utils.translation import ugettext as _
 
 from django.conf import settings
@@ -463,7 +463,7 @@ class TouristicCategoryView(APIView):
 
         if request.GET.get('events', False):
             response.append({'id': 'E',
-                             'label': _(u"Touristic events"),
+                             'label': _("Touristic events"),
                              'type1_label': "",
                              'type2_label': "",
                              'pictogram': os.path.join(settings.STATIC_URL, 'tourism', 'touristicevent.svg'),

@@ -37,7 +37,7 @@ class InterventionViewsTest(CommonTest):
             ('manday_set-TOTAL_FORMS', '0'),
             ('manday_set-INITIAL_FORMS', '1'),
             ('manday_set-MAX_NUM_FORMS', '0'),
-        ]), u'This field is required.'
+        ]), 'This field is required.'
 
     def get_good_data(self):
         InterventionStatusFactory.create()  # in case not any in db
@@ -79,7 +79,7 @@ class InterventionViewsTest(CommonTest):
         self.login()
 
         infra = InfrastructureFactory.create()
-        infrastr = u"%s" % infra
+        infrastr = "%s" % infra
 
         response = self.client.get(Intervention.get_add_url() + '?infrastructure=%s' % infra.pk)
         self.assertEqual(response.status_code, 200)
@@ -96,7 +96,7 @@ class InterventionViewsTest(CommonTest):
         self.login()
 
         infra = InfrastructureFactory.create()
-        infrastr = u"%s" % infra
+        infrastr = "%s" % infra
 
         response = self.client.get(Intervention.get_add_url() + '?infrastructure=%s' % infra.pk)
         self.assertEqual(response.status_code, 200)
@@ -115,7 +115,7 @@ class InterventionViewsTest(CommonTest):
         self.login()
 
         infra = InfrastructureFactory.create()
-        infrastr = u"%s" % infra
+        infrastr = "%s" % infra
 
         intervention = InterventionFactory.create()
         intervention.set_infrastructure(infra)
@@ -189,10 +189,10 @@ class InterventionViewsTest(CommonTest):
         self.assertEqual(response.status_code, 200)
         form = self.get_form(response)
         projects = form.fields['project'].queryset.all()
-        self.assertItemsEqual(projects, [p1, p2])
+        self.assertCountEqual(projects, [p1, p2])
         p2.delete()
         projects = form.fields['project'].queryset.all()
-        self.assertItemsEqual(projects, [p1])
+        self.assertCountEqual(projects, [p1])
 
     def test_no_html_in_csv(self):
         InfrastructureInterventionFactory.create()
@@ -220,7 +220,7 @@ class ProjectViewsTest(CommonTest):
             ('funding_set-TOTAL_FORMS', '0'),
             ('funding_set-INITIAL_FORMS', '1'),
             ('funding_set-MAX_NUM_FORMS', '0'),
-        ]), u'This field is required.'
+        ]), 'This field is required.'
 
     def get_good_data(self):
         return {
@@ -266,7 +266,7 @@ class ProjectViewsTest(CommonTest):
         # Check that only p1 is in geojson
         response = self.client.get(self.model.get_layer_url())
         self.assertEqual(response.status_code, 200)
-        geojson = json.loads(response.content)
+        geojson = json.loads(response.content.decode())
         features = geojson['features']
 
         self.assertEqual(len(Project.objects.all()), 2)
@@ -287,7 +287,7 @@ class ProjectViewsTest(CommonTest):
             url = self.model.get_jsonlist_url() + bbox
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
-            jsondict = json.loads(response.content)
+            jsondict = json.loads(response.content.decode())
             return jsondict['aaData']
 
         # Check that projects without interventions are always present
@@ -336,7 +336,7 @@ class ExportTest(TranslationResetMixin, TestCase):
         closest_path = PathFactory(geom=LineString(Point(0, 0), Point(1, 0), srid=settings.SRID))
         topo_point = TopologyHelper._topologypoint(lng, lat, None).reload()
 
-        self.assertEquals(topo_point.paths.get(), closest_path)
+        self.assertEqual(topo_point.paths.get(), closest_path)
 
         # Create one intervention by geometry (point/linestring)
         it_point = InterventionFactory.create(topology=topo_point)
@@ -355,40 +355,40 @@ class ExportTest(TranslationResetMixin, TestCase):
         devnull = open(os.devnull, "wb")
         pfl.serialize(Project.objects.all(), stream=devnull, delete=False,
                       fields=ProjectFormatList.columns)
-        self.assertEquals(len(pfl.layers), 2)
+        self.assertEqual(len(pfl.layers), 2)
 
-        ds_point = gdal.DataSource(pfl.layers.values()[0])
+        ds_point = gdal.DataSource(list(pfl.layers.values())[0])
         layer_point = ds_point[0]
-        ds_line = gdal.DataSource(pfl.layers.values()[1])
+        ds_line = gdal.DataSource(list(pfl.layers.values())[1])
         layer_line = ds_line[0]
 
-        self.assertEquals(layer_point.geom_type.name, 'MultiPoint')
-        self.assertEquals(layer_line.geom_type.name, 'LineString')
+        self.assertEqual(layer_point.geom_type.name, 'MultiPoint')
+        self.assertEqual(layer_line.geom_type.name, 'LineString')
 
         for layer in [layer_point, layer_line]:
-            self.assertEquals(layer.srs.name, 'RGF93_Lambert_93')
-            self.assertItemsEqual(layer.fields, [
-                u'id', u'name', u'period', u'type', u'domain', u'constraint',
-                u'global_cos', u'interventi', u'interven_1', u'comments',
-                u'contractor', u'project_ow', u'project_ma', u'founders',
-                u'related_st', u'insertion_', u'update_dat',
-                u'cities', u'districts', u'restricted'
+            self.assertEqual(layer.srs.name, 'RGF93_Lambert_93')
+            self.assertCountEqual(layer.fields, [
+                'id', 'name', 'period', 'type', 'domain', 'constraint',
+                'global_cos', 'interventi', 'interven_1', 'comments',
+                'contractor', 'project_ow', 'project_ma', 'founders',
+                'related_st', 'insertion_', 'update_dat',
+                'cities', 'districts', 'restricted'
             ])
 
-        self.assertEquals(len(layer_point), 1)
-        self.assertEquals(len(layer_line), 1)
+        self.assertEqual(len(layer_point), 1)
+        self.assertEqual(len(layer_line), 1)
 
         for feature in layer_point:
-            self.assertEquals(str(feature['id']), str(proj.pk))
-            self.assertEquals(len(feature.geom.geos), 1)
+            self.assertEqual(str(feature['id']), str(proj.pk))
+            self.assertEqual(len(feature.geom.geos), 1)
             self.assertAlmostEqual(feature.geom.geos[0].x, it_point.geom.x)
             self.assertAlmostEqual(feature.geom.geos[0].y, it_point.geom.y)
 
         for feature in layer_line:
-            self.assertEquals(str(feature['id']), str(proj.pk))
+            self.assertEqual(str(feature['id']), str(proj.pk))
             self.assertTrue(feature.geom.geos.equals(it_line.geom))
 
         # Clean-up temporary shapefiles
-        for layer_file in pfl.layers.values():
+        for layer_file in list(pfl.layers.values()):
             for subfile in shapefile_files(layer_file):
                 os.remove(subfile)

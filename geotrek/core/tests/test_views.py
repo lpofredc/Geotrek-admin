@@ -66,7 +66,7 @@ class PathViewsTest(CommonTest):
             form = response.context['form']
             self.assertTrue('stake' in form.fields)
             stakefield = form.fields['stake']
-            self.assertTrue((stake.pk, unicode(stake)) in stakefield.choices)
+            self.assertTrue((stake.pk, str(stake)) in stakefield.choices)
             self.client.logout()
         # Test for two structures
         s1 = StructureFactory.create()
@@ -96,13 +96,13 @@ class PathViewsTest(CommonTest):
         form = response.context['form']
         self.assertTrue('stake' in form.fields)
         stakefield = form.fields['stake']
-        self.assertTrue((st0.pk, unicode(st0)) in stakefield.choices)
-        self.assertTrue((st1.pk, unicode(st1)) in stakefield.choices)
-        self.assertFalse((st2.pk, unicode(st2)) in stakefield.choices)
+        self.assertTrue((st0.pk, str(st0)) in stakefield.choices)
+        self.assertTrue((st1.pk, str(st1)) in stakefield.choices)
+        self.assertFalse((st2.pk, str(st2)) in stakefield.choices)
 
     def test_basic_format(self):
         self.modelfactory.create()
-        self.modelfactory.create(name=u"ãéè")
+        self.modelfactory.create(name="ãéè")
         super(CommonTest, self).test_basic_format()
 
     def test_path_form_is_not_valid_if_no_geometry_provided(self):
@@ -163,7 +163,7 @@ class PathViewsTest(CommonTest):
         self.login()
         response = self.client.get('/api/path/paths.json')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(json.loads(response.content)['sumPath'], 0.0)
+        self.assertEqual(json.loads(response.content.decode())['sumPath'], 0.0)
 
     def test_sum_path_two(self):
         self.login()
@@ -171,7 +171,7 @@ class PathViewsTest(CommonTest):
         PathFactory()
         response = self.client.get('/api/path/paths.json')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(json.loads(response.content)['sumPath'], 0.3)
+        self.assertEqual(json.loads(response.content.decode())['sumPath'], 0.3)
 
     def test_merge_fails(self):
         self.login()
@@ -182,25 +182,25 @@ class PathViewsTest(CommonTest):
         p2 = PathFactory.create()
         p2.save()
         response = self.client.post('/mergepath/', {'path[]': [p1.pk, p2.pk]})
-        self.assertEqual(response.content, 'error')
+        self.assertEqual(response.content, b'error')
 
     def test_merge_fails_trigger(self):
         self.login()
         p1 = PathFactory.create(name="AB", geom=LineString((0, 0), (1, 0)))
         p2 = PathFactory.create(name="BC", geom=LineString((500, 0), (1000, 0)))
         response = self.client.post('/mergepath/', {'path[]': [p1.pk, p2.pk]})
-        self.assertEqual(response.content, 'error')
+        self.assertEqual(response.content, b'error')
         p3 = PathFactory.create(name="AB", geom=LineString((1, 0), (2, 0)))
         p4 = PathFactory.create(name="BC", geom=LineString((1, 0), (10, 10)))
         response = self.client.post('/mergepath/', {'path[]': [p3.pk, p4.pk]})
-        self.assertEqual(response.content, 'error')
+        self.assertEqual(response.content, b'error')
 
     def test_mege_works(self):
         self.login()
         p1 = PathFactory.create(name="AB", geom=LineString((0, 0), (1, 0)))
         p2 = PathFactory.create(name="BC", geom=LineString((1, 0), (2, 0)))
         response = self.client.post('/mergepath/', {'path[]': [p1.pk, p2.pk]})
-        self.assertEqual(response.content, 'success')
+        self.assertEqual(response.content, b'success')
         p1.reload()
         self.assertEqual(p1.geom, LineString((0, 0), (1, 0), (2, 0), srid=settings.SRID))
 
@@ -233,10 +233,10 @@ class DenormalizedTrailTest(AuthentFixturesTest):
         self.login()
         response = self.client.get(reverse('core:path_json_list'))
         self.assertEqual(response.status_code, 200)
-        paths_json = json.loads(response.content)
+        paths_json = json.loads(response.content.decode())
         trails_column = paths_json['aaData'][0][6]
-        self.assertTrue(trails_column == u'%s, %s' % (self.trail1.name_display, self.trail2.name_display)
-                        or trails_column == u'%s, %s' % (self.trail2.name_display, self.trail1.name_display))
+        self.assertTrue(trails_column == '%s, %s' % (self.trail1.name_display, self.trail2.name_display)
+                        or trails_column == '%s, %s' % (self.trail2.name_display, self.trail1.name_display))
 
 
 class TrailViewsTest(CommonTest):
@@ -262,11 +262,11 @@ class TrailViewsTest(CommonTest):
 
     @mock.patch('mapentity.models.MapEntityMixin.get_attributes_html')
     def test_document_export(self, get_attributes_html):
-        get_attributes_html.return_value = '<p>mock</p>'
+        get_attributes_html.return_value = b'<p>mock</p>'
         trail = TrailFactory()
         self.login()
-        with open(trail.get_map_image_path(), 'w') as f:
-            f.write('***' * 1000)
+        with open(trail.get_map_image_path(), 'wb+') as f:
+            f.write(b'***' * 1000)
         response = self.client.get(trail.get_document_url())
         self.assertEqual(response.status_code, 200)
 

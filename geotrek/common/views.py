@@ -120,7 +120,7 @@ class JSSettings(mapentity_views.JSSettings):
         dictsettings = super(JSSettings, self).get_context_data()
         # Add geotrek map styles
         base_styles = dictsettings['map']['styles']
-        for name, override in settings.MAP_STYLES.items():
+        for name, override in list(settings.MAP_STYLES.items()):
             merged = base_styles.get(name, {})
             merged.update(override)
             base_styles[name] = merged
@@ -186,7 +186,7 @@ class UserArgMixin(object):
 
 def import_file(uploaded, parser, encoding, user_pk):
     destination_dir, destination_file = create_tmp_destination(uploaded.name)
-    with open(destination_file, 'w+') as f:
+    with open(destination_file, 'wb+') as f:
         f.write(uploaded.file.read())
         zfile = ZipFile(f)
         for name in zfile.namelist():
@@ -264,12 +264,12 @@ def import_update_json(request):
                     'status': task.status
                 }
             )
-    i = celery_app.control.inspect([u'celery@geotrek'])
+    i = celery_app.control.inspect(['celery@geotrek'])
     try:
         reserved = i.reserved()
     except redis.exceptions.ConnectionError:
         reserved = None
-    tasks = [] if reserved is None else reversed(reserved[u'celery@geotrek'])
+    tasks = [] if reserved is None else reversed(reserved['celery@geotrek'])
     for task in tasks:
         if task['name'].startswith('geotrek.common'):
             args = ast.literal_eval(task['args'])

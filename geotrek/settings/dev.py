@@ -1,12 +1,13 @@
-from .default import *
+from .base import * #noqa
+from django.conf.global_settings import LANGUAGES as LANGUAGES_LIST
 
 #
 # Django Development
 # ..........................
 
 DEBUG = True
-TEMPLATES[1]['OPTIONS']['debug'] = True
-DEBUG_TOOLBAR = False
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 #
 # Developper additions
@@ -14,17 +15,18 @@ DEBUG_TOOLBAR = False
 
 INSTALLED_APPS = (
     'django_extensions',
+    'debug_toolbar',
 ) + INSTALLED_APPS
 
-INTERNAL_IPS = (
-    '127.0.0.1',  # localhost default
-    '10.0.3.1',  # lxc default
-)
+INTERNAL_IPS = type(str('c'), (), {'__contains__': lambda *a: True})()
 
 ALLOWED_HOSTS = [
     '*',
 ]
 
+MIDDLEWARE_CLASSES += (
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
+)
 #
 # Use some default tiles
 # ..........................
@@ -32,10 +34,17 @@ ALLOWED_HOSTS = [
 LOGGING['loggers']['geotrek']['level'] = 'DEBUG'
 LOGGING['loggers']['']['level'] = 'DEBUG'
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
 try:
-    from .local import *  # NOQA
-    # set local settings for dev
+    from .custom import *  # NOQA
+
 except ImportError:
     pass
+
+# force reloading data in custom.py
+_MODELTRANSLATION_LANGUAGES = [l for l in LANGUAGES_LIST
+                               if l[0] in MODELTRANSLATION_LANGUAGES]
+
+LEAFLET_CONFIG['TILES_EXTENT'] = SPATIAL_EXTENT
+LEAFLET_CONFIG['SPATIAL_EXTENT'] = api_bbox(SPATIAL_EXTENT, VIEWPORT_MARGIN)
+MAPENTITY_CONFIG['TRANSLATED_LANGUAGES'] = _MODELTRANSLATION_LANGUAGES
+MAPENTITY_CONFIG['LANGUAGE_CODE'] = LANGUAGE_CODE

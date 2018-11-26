@@ -9,8 +9,8 @@ from mapentity.registry import registry
 
 
 class AuthentFixturesMixin(object):
-    fixtures = [os.path.join(settings.PROJECT_ROOT_PATH, 'authent', 'fixtures', 'minimal.json'),
-                os.path.join(settings.PROJECT_ROOT_PATH, 'authent', 'fixtures', 'basic.json')]
+    fixtures = [os.path.join(settings.PROJECT_DIR, 'authent', 'fixtures', 'minimal.json'),
+                os.path.join(settings.PROJECT_DIR, 'authent', 'fixtures', 'basic.json')]
 
     def _pre_setup(self):
         if not isinstance(self, TestCase):
@@ -31,7 +31,7 @@ class AuthentFixturesMixin(object):
         # Workaround https://code.djangoproject.com/ticket/10827
         ContentType.objects.clear_cache()
 
-        if not registry.registry.keys():
+        if not list(registry.registry.keys()):
             from geotrek.core import urls  # NOQA
             from geotrek.land import urls  # NOQA
             from geotrek.maintenance import urls  # NOQA

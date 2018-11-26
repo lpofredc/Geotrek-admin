@@ -18,10 +18,10 @@ class PathFilterTest(AuthentFixturesTest):
         password = 'toto'
         user = PathManagerFactory(password=password)
         result = self.client.login(username=user.username, password=password)
-        self.assertTrue(result, u"The client successfully logged in")
+        self.assertTrue(result, "The client successfully logged in")
 
         response = self.client.get(reverse('core:path_list'))
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
         def create_form_params(range_start='', range_end=''):
             """Return range form parameter as used in geotrek.core.filters.PathFilter"""
@@ -29,9 +29,9 @@ class PathFilterTest(AuthentFixturesTest):
 
         def test_response_content(length_range, queryset):
             response = self.client.get(reverse('core:path_json_list'), data=create_form_params(*length_range))
-            self.assertEquals(response.status_code, 200)
+            self.assertEqual(response.status_code, 200)
             # We check the 'map_obj_pk' json attribute that should contain the paths' pk (used by map)
-            jsondict = json.loads(response.content)
+            jsondict = json.loads(response.content.decode())
             # The JSON should only contain filtered paths
             self.assertListEqual(
                 sorted(jsondict['map_obj_pk']),

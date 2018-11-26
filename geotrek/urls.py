@@ -17,7 +17,7 @@ handler404 = 'mapentity.views.handler404'
 urlpatterns = [
     url(r'^$', common_views.home, name='home'),
     url(r'^login/$', auth_views.login, name='login'),
-    url(r'^logout/$', auth_views.logout, {'next_page': settings.ROOT_URL + '/'}, name='logout',),
+    url(r'^logout/$', auth_views.logout, {'next_page': '/'}, name='logout',),
 
     url(r'', include('geotrek.common.urls', namespace='common', app_name='common')),
     url(r'', include('geotrek.altimetry.urls', namespace='altimetry', app_name='altimetry')),
@@ -39,7 +39,8 @@ if 'geotrek.land' in settings.INSTALLED_APPS:
 if 'geotrek.zoning' in settings.INSTALLED_APPS:
     urlpatterns.append(url(r'', include('geotrek.zoning.urls', namespace='zoning', app_name='zoning')))
 if 'geotrek.infrastructure' in settings.INSTALLED_APPS:
-    urlpatterns.append(url(r'', include('geotrek.infrastructure.urls', namespace='infrastructure', app_name='infrastructure')))
+    urlpatterns.append(url(r'', include('geotrek.infrastructure.urls', namespace='infrastructure',
+                                        app_name='infrastructure')))
 if 'geotrek.maintenance' in settings.INSTALLED_APPS:
     urlpatterns.append(url(r'', include('geotrek.maintenance.urls', namespace='maintenance', app_name='maintenance')))
 if 'geotrek.trekking' in settings.INSTALLED_APPS:
@@ -58,7 +59,7 @@ if 'geotrek.api' in settings.INSTALLED_APPS:
 urlpatterns += staticfiles_urlpatterns()
 urlpatterns += static.static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-if settings.DEBUG and settings.DEBUG_TOOLBAR:
+if settings.DEBUG:
     try:
         import debug_toolbar
         urlpatterns = [

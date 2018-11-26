@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 from copy import deepcopy
 from zipfile import is_zipfile
 
@@ -68,7 +67,7 @@ class CommonForm(MapEntityForm):
 
         self.update = kwargs.get("instance") is not None
 
-        for name, field in self.fields.items():
+        for name, field in list(self.fields.items()):
             self.filter_related_field(name, field)
 
         # allow to modify layout per instance

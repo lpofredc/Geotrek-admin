@@ -76,35 +76,35 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.ERROR(
                         "Field '{}' not found in data source.".format(field_infrastructure_type)))
                     self.stdout.write(self.style.ERROR(
-                        u"Set it with --type-field, or set a default value with --type-default"))
+                        "Set it with --type-field, or set a default value with --type-default"))
                     break
                 if (field_name and field_name not in available_fields)\
                         or (not field_name and not options.get('name_default')):
                     self.stdout.write(self.style.ERROR(
                         "Field '{}' not found in data source.".format(field_name)))
                     self.stdout.write(self.style.ERROR(
-                        u"Set it with --name-field, or set a default value with --name-default"))
+                        "Set it with --name-field, or set a default value with --name-default"))
                     break
                 if (field_condition_type and field_condition_type not in available_fields)\
                         or (not field_condition_type and not options.get('condition_default')):
                     self.stdout.write(self.style.ERROR(
                         "Field '{}' not found in data source.".format(field_condition_type)))
                     self.stdout.write(self.style.ERROR(
-                        u"Set it with --condition-field, or set a default value with --condition-default"))
+                        "Set it with --condition-field, or set a default value with --condition-default"))
                     break
                 if (field_structure_type and field_structure_type not in available_fields)\
                         or (not field_structure_type and not options.get('structure_default')):
                     self.stdout.write(self.style.ERROR(
                         "Field '{}' not found in data source.".format(field_structure_type)))
                     self.stdout.write(self.style.ERROR(
-                        u"Set it with --structure-field, or set a default value with --structure-default"))
+                        "Set it with --structure-field, or set a default value with --structure-default"))
                     break
                 if (field_description and field_description not in available_fields)\
                         or (not field_condition_type and not options.get('description_default')):
                     self.stdout.write(self.style.ERROR(
                         "Field '{}' not found in data source.".format(field_description)))
                     self.stdout.write(self.style.ERROR(
-                        u"Set it with --description-field, or set a default value with --description-default"))
+                        "Set it with --description-field, or set a default value with --description-default"))
                     break
                 if (field_implantation_year and field_implantation_year not in available_fields) \
                         or (not field_condition_type and not options.get('year_default')):
@@ -140,10 +140,10 @@ class Command(BaseCommand):
 
             transaction.savepoint_commit(sid)
             if verbosity >= 2:
-                self.stdout.write(self.style.NOTICE(u"{} objects created.".format(self.counter)))
+                self.stdout.write(self.style.NOTICE("{} objects created.".format(self.counter)))
 
         except Exception:
-            self.stdout.write(self.style.ERROR(u"An error occured, rolling back operations."))
+            self.stdout.write(self.style.ERROR("An error occured, rolling back operations."))
             transaction.savepoint_rollback(sid)
             raise
 
@@ -152,17 +152,17 @@ class Command(BaseCommand):
         infra_type, created = InfrastructureType.objects.get_or_create(label=type, type=model)
 
         if created and verbosity:
-            self.stdout.write(u"- InfrastructureType '{}' created".format(infra_type))
+            self.stdout.write("- InfrastructureType '{}' created".format(infra_type))
 
         condition_type, created = InfrastructureCondition.objects.get_or_create(label=condition)
 
         if created and verbosity:
-            self.stdout.write(u"- Condition Type '{}' created".format(condition_type))
+            self.stdout.write("- Condition Type '{}' created".format(condition_type))
 
         structure, created = Structure.objects.get_or_create(name=structure)
 
         if created and verbosity:
-            self.stdout.write(u"- Structure '{}' created".format(structure))
+            self.stdout.write("- Structure '{}' created".format(structure))
         with transaction.atomic():
             Model = Signage if model == 'S' else Infrastructure
             infra = Model.objects.create(

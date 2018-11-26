@@ -1,5 +1,4 @@
 # -*- encoding: utf-8 -*-
-
 import os
 import mock
 import requests
@@ -71,9 +70,8 @@ class BiodivParserTests(TranslationResetMixin, TestCase):
         species = Species.objects.get()
         area = SensitiveArea.objects.get()
         self.assertEqual(practice.name, "Land")
-        self.assertEqual(practice.name_fr, "Terrestre")
-        self.assertEqual(species.name, u"Black grouse")
-        self.assertEqual(species.name_fr, u"Tétras lyre")
+        self.assertEqual(species.name, "Black grouse")
+        self.assertEqual(species.name_fr, "Tétras lyre")
         self.assertTrue(species.period01)
         self.assertFalse(species.period06)
         self.assertEqual(species.eid, '7')
@@ -87,17 +85,17 @@ class BiodivParserTests(TranslationResetMixin, TestCase):
 class SpeciesSensitiveAreaShapeParserTest(TestCase):
     def test_cli(self):
         filename = os.path.join(os.path.dirname(__file__), 'data', 'species.shp')
-        species = SpeciesFactory(name=u"Aigle royal")
+        species = SpeciesFactory(name="Aigle royal")
         call_command('import', 'geotrek.sensitivity.parsers.SpeciesSensitiveAreaShapeParser', filename, verbosity=0)
         area = SensitiveArea.objects.get()
         self.assertEqual(area.species, species)
-        self.assertEqual(area.contact, u"Contact")
-        self.assertEqual(area.description, u"Test UTF8 éêè")
+        self.assertEqual(area.contact, "Contact")
+        self.assertEqual(area.description, "Test UTF8 éêè")
         self.assertEqual(
             area.geom.wkt,
-            'POLYGON ((929315.3613368585 6483309.443505395, 929200.3539448172 6483204.020062691, '
-            '928404.8861498644 6482494.80781177, 928194.0392644553 6482082.697990288, '
-            '927925.6886830255 6481210.558600641, 927676.5060002692 6481287.230195334, '
-            '927772.345493637 6481498.077080746, 927887.3528856783 6481900.60295289, '
-            '928184.4553151187 6482600.231254471, 928625.3169846105 6483520.290390803, '
-            '929162.0181474701 6483664.049630859, 929315.3613368585 6483309.443505395))')
+            'POLYGON ((929315.3613368585 6483309.443505396, 929200.3539448171 6483204.020062691, '
+            '928404.8861498644 6482494.807811771, 928194.0392644553 6482082.697990287, '
+            '927925.6886830255 6481210.558600639, 927676.5060002692 6481287.230195334, '
+            '927772.345493637 6481498.077080746, 927887.3528856782 6481900.602952889, '
+            '928184.4553151187 6482600.231254471, 928625.3169846105 6483520.290390805, '
+            '929162.0181474701 6483664.049630859, 929315.3613368585 6483309.443505396))')

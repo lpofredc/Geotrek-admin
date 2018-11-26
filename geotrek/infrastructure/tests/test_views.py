@@ -21,16 +21,16 @@ class InfrastructureTest(TestCase):
     def test_helpers(self):
         p = PathFactory.create()
 
-        self.assertEquals(len(p.infrastructures), 0)
+        self.assertEqual(len(p.infrastructures), 0)
         sign = SignageFactory.create(no_path=True)
         sign.add_path(path=p, start=0.5, end=0.5)
 
-        self.assertItemsEqual(p.signages, [sign])
+        self.assertCountEqual(p.signages, [sign])
 
         infra = InfrastructureFactory.create(no_path=True)
         infra.add_path(path=p)
 
-        self.assertItemsEqual(p.infrastructures, [infra])
+        self.assertCountEqual(p.infrastructures, [infra])
 
 
 class InfrastructureViewsTest(CommonTest):
@@ -86,10 +86,10 @@ class InfrastructureTypeTest(TestCase):
 
         self.assertNotEqual(InfrastructureType.objects.for_signages(),
                             InfrastructureType.objects.for_infrastructures())
-        self.assertItemsEqual(InfrastructureType.objects.for_signages(), [it3])
-        self.assertItemsEqual(InfrastructureType.objects.for_infrastructures(),
+        self.assertCountEqual(InfrastructureType.objects.for_signages(), [it3])
+        self.assertCountEqual(InfrastructureType.objects.for_infrastructures(),
                               [it1, it2])
-        self.assertItemsEqual(InfrastructureType.objects.all(), [it1, it2, it3])
+        self.assertCountEqual(InfrastructureType.objects.all(), [it1, it2, it3])
 
 
 class InfrastructureConditionTest(TestCase):
@@ -98,7 +98,7 @@ class InfrastructureConditionTest(TestCase):
         it2 = InfrastructureConditionFactory.create()
         it3 = InfrastructureConditionFactory.create()
 
-        self.assertItemsEqual(InfrastructureCondition.objects.all(), [it1, it2, it3])
+        self.assertCountEqual(InfrastructureCondition.objects.all(), [it1, it2, it3])
 
 
 class InfraFilterTestMixin():
@@ -136,9 +136,9 @@ class InfraFilterTestMixin():
         response = self.client.get(model.get_jsonlist_url(), data)
 
         self.assertEqual(response.status_code, 200)
-        topo_pk = json.loads(response.content)['map_obj_pk']
+        topo_pk = json.loads(response.content.decode())['map_obj_pk']
 
-        self.assertItemsEqual(topo_pk, [good_topo.pk])
+        self.assertCountEqual(topo_pk, [good_topo.pk])
 
     def test_intervention_filter_has_correct_label(self):
         self.login()
@@ -193,8 +193,8 @@ class InfrastructureFilterTest(InfraFilterTestMixin, AuthentFixturesTest):
         i2 = InfrastructureFactory.create(implantation_year=2016)
         response = self.client.get(model.get_list_url())
 
-        self.assertTrue('<option value="2015">2015</option>' in str(response))
-        self.assertTrue('<option value="2016">2016</option>' in str(response))
+        self.assertContains(response, '<option value="2015">2015</option>')
+        self.assertContains(response, '<option value="2016">2016</option>')
 
         self.assertTrue(i in filter.qs)
         self.assertFalse(i2 in filter.qs)
@@ -207,8 +207,8 @@ class InfrastructureFilterTest(InfraFilterTestMixin, AuthentFixturesTest):
         i2 = InfrastructureFactory.create(implantation_year=2016)
         response = self.client.get(model.get_list_url())
 
-        self.assertTrue('<option value="2015">2015</option>' in str(response))
-        self.assertTrue('<option value="2016">2016</option>' in str(response))
+        self.assertContains(response, '<option value="2015">2015</option>')
+        self.assertContains(response, '<option value="2016">2016</option>')
 
         self.assertIn(i, filter.qs)
         self.assertIn(i2, filter.qs)

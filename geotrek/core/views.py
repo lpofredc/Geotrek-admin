@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 import json
 import logging
 from collections import defaultdict
@@ -72,7 +71,7 @@ class PathList(MapEntityList):
         return columns
 
     def get_template_names(self):
-        return (u"core/path_list.html",)
+        return ("core/path_list.html",)
 
     def get_queryset(self):
         """
@@ -97,7 +96,8 @@ class PathList(MapEntityList):
 class PathJsonList(MapEntityJsonList, PathList):
     def get_context_data(self, **kwargs):
         context = super(PathJsonList, self).get_context_data(**kwargs)
-        context["sumPath"] = round(self.object_list.aggregate(sumPath=Coalesce(Sum(Length('geom'), output_field=FloatField()), 0))['sumPath'] / 1000, 1)
+        context["sumPath"] = round(self.object_list.aggregate(
+            sumPath=Coalesce(Sum(Length('geom'), output_field=FloatField()), 0))['sumPath'] / 1000, 1)
         return context
 
 
@@ -273,7 +273,7 @@ def merge_path(request):
         path_b = Path.objects.get(pk=ids_path_merge[1])
 
         if not path_a.same_structure(request.user) or not path_b.same_structure(request.user):
-            response = {'error': _(u"You don't have the right to change these paths")}
+            response = {'error': _("You don't have the right to change these paths")}
             return HttpJSONResponse(response)
 
         try:
@@ -283,12 +283,12 @@ def merge_path(request):
             return HttpJSONResponse(response)
 
         if result == 2:
-            response = {'error': _(u"You can't merge 2 paths with a 3rd path in the intersection")}
+            response = {'error': _("You can't merge 2 paths with a 3rd path in the intersection")}
         elif result == 0:
-            response = {'error': _(u"No matching points to merge paths found")}
+            response = {'error': _("No matching points to merge paths found")}
         else:
-            response = {'success': _(u"Paths merged successfully")}
-            messages.success(request, _(u"Paths merged successfully"))
+            response = {'success': _("Paths merged successfully")}
+            messages.success(request, _("Paths merged successfully"))
 
         return HttpJSONResponse(response)
 

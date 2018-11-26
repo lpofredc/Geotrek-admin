@@ -54,7 +54,7 @@ class BiodivParser(Parser):
     def next_row(self):
         response = requests.get('https://biodiv-sports.fr/api/v2/sportpractice/')
         if response.status_code != 200:
-            msg = _(u"Failed to download https://biodiv-sports.fr/api/v2/sportpractice/. HTTP status code {status_code}")
+            msg = _("Failed to download https://biodiv-sports.fr/api/v2/sportpractice/. HTTP status code {status_code}")
             raise GlobalImportError(msg.format(url=response.url, status_code=response.status_code))
         for practice in response.json()['results']:
             defaults = {'name_' + lang: practice['name'][lang] for lang in practice['name'].keys() if lang in settings.MODELTRANSLATION_LANGUAGES}
@@ -68,7 +68,7 @@ class BiodivParser(Parser):
             url += '&practices={}'.format(','.join([str(practice) for practice in self.practices]))
         response = requests.get(url)
         if response.status_code != 200:
-            msg = _(u"Failed to download {url}. HTTP status code {status_code}")
+            msg = _("Failed to download {url}. HTTP status code {status_code}")
             raise GlobalImportError(msg.format(url=response.url, status_code=response.status_code))
 
         self.root = response.json()
@@ -104,7 +104,7 @@ class BiodivParser(Parser):
                 species = Species.objects.get(eid=eid)
             except Species.DoesNotExist:
                 species = Species(category=Species.SPECIES, eid=eid)
-        for lang, translation in names.items():
+        for lang, translation in list(names.items()):
             if lang in settings.MODELTRANSLATION_LANGUAGES and translation != getattr(species, 'name_' + lang):
                 setattr(species, 'name_' + lang, translation)
                 need_save = True
@@ -134,7 +134,7 @@ for i in range(12):
 
 class SpeciesSensitiveAreaShapeParser(ShapeParser):
     model = SensitiveArea
-    label = u"Shapefile zone sensible espèce"
+    label = "Shapefile zone sensible espèce"
     separator = ','
     delete = False
     fields = {
@@ -155,14 +155,14 @@ class SpeciesSensitiveAreaShapeParser(ShapeParser):
         try:
             species = Species.objects.get(category=Species.SPECIES, name=val)
         except Species.DoesNotExist:
-            msg = u"L'espèce {} n'existe pas dans Geotrek. Merci de la créer.".format(val)
+            msg = "L'espèce {} n'existe pas dans Geotrek. Merci de la créer.".format(val)
             raise RowImportError(msg)
         return species
 
 
 class RegulatorySensitiveAreaShapeParser(ShapeParser):
     model = SensitiveArea
-    label = u"Shapefile zone sensible réglementaire"
+    label = "Shapefile zone sensible réglementaire"
     separator = ','
     delete = False
     fields = {
@@ -197,7 +197,7 @@ class RegulatorySensitiveAreaShapeParser(ShapeParser):
                 try:
                     practice = SportPractice.objects.get(name=practice_name)
                 except SportPractice.DoesNotExist:
-                    msg = u"La pratique sportive {} n'existe pas dans Geotrek. Merci de l'ajouter.".format(practice_name)
+                    msg = "La pratique sportive {} n'existe pas dans Geotrek. Merci de l'ajouter.".format(practice_name)
                     raise RowImportError(msg)
                 practices.append(practice)
         species.save()
@@ -205,4 +205,4 @@ class RegulatorySensitiveAreaShapeParser(ShapeParser):
         return species
 
     def normalize_field_name(self, name):
-        return unicodedata.normalize('NFD', unicode(name)).encode('ascii', 'ignore').upper()
+        return unicodedata.normalize('NFD', str(name)).encode('ascii', 'ignore').upper()

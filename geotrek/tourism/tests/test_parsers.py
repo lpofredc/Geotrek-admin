@@ -16,15 +16,15 @@ from geotrek.tourism.parsers import TouristicContentApidaeParser, EspritParcPars
 
 
 class EauViveParser(TouristicContentApidaeParser):
-    category = u"Eau vive"
-    type1 = [u"Type A", u"Type B"]
+    category = "Eau vive"
+    type1 = ["Type A", "Type B"]
     type2 = []
 
 
 class EspritParc(EspritParcParser):
-    category = u"Miels et produits de la ruche"
-    type1 = [u"Miel", u"Pollen", u"Gelée royale, propolis et pollen"]
-    type2 = [u"Hautes Alpes Naturellement", u"Bienvenue à la ferme", u"Agriculture biologique"]
+    category = "Miels et produits de la ruche"
+    type1 = ["Miel", "Pollen", "Gelée royale, propolis et pollen"]
+    type2 = ["Hautes Alpes Naturellement", "Bienvenue à la ferme", "Agriculture biologique"]
 
 
 class ParserTests(TranslationResetMixin, TestCase):
@@ -36,25 +36,26 @@ class ParserTests(TranslationResetMixin, TestCase):
                 return json.load(f)
         mocked.return_value.status_code = 200
         mocked.return_value.json = mocked_json
-        FileType.objects.create(type=u"Photographie")
-        category = TouristicContentCategoryFactory(label=u"Eau vive")
-        TouristicContentTypeFactory(label=u"Type A", in_list=1)
-        TouristicContentTypeFactory(label=u"Type B", in_list=1)
+        mocked.return_value.content = b''
+        FileType.objects.create(type="Photographie")
+        category = TouristicContentCategoryFactory(label="Eau vive")
+        TouristicContentTypeFactory(label="Type A", in_list=1)
+        TouristicContentTypeFactory(label="Type B", in_list=1)
         call_command('import', 'geotrek.tourism.tests.test_parsers.EauViveParser', verbosity=0)
         self.assertEqual(TouristicContent.objects.count(), 1)
         content = TouristicContent.objects.get()
-        self.assertEqual(content.eid, u"479743")
-        self.assertEqual(content.name, u"Quey' Raft")
-        self.assertEqual(content.description[:27], u"Au pied du château médiéval")
-        self.assertEqual(content.description_teaser[:24], u"Des descentes familiales")
-        self.assertEqual(content.contact[:24], u"Château Queyras<br>05350")
-        self.assertEqual(content.email, u"info@queyraft.com")
-        self.assertEqual(content.website, u"http://www.queyraft.com")
+        self.assertEqual(content.eid, "479743")
+        self.assertEqual(content.name, "Quey' Raft")
+        self.assertEqual(content.description[:27], "Au pied du château médiéval")
+        self.assertEqual(content.description_teaser[:24], "Des descentes familiales")
+        self.assertEqual(content.contact[:24], "Château Queyras<br>05350")
+        self.assertEqual(content.email, "info@queyraft.com")
+        self.assertEqual(content.website, "http://www.queyraft.com")
         self.assertEqual(round(content.geom.x), 1000157)
         self.assertEqual(round(content.geom.y), 6413576)
         self.assertEqual(content.practical_info[:39], "<b>Ouverture:</b><br>Du 01/05 au 31/10.")
-        self.assertTrue(u"<br><b>Capacité totale:</b><br>10<br>" in content.practical_info)
-        self.assertTrue(u"><br><b>Services:</b><br>Test, Test2, Test3, Test4<br>" in content.practical_info)
+        self.assertTrue("<br><b>Capacité totale:</b><br>10<br>" in content.practical_info)
+        self.assertTrue("><br><b>Services:</b><br>Test, Test2, Test3, Test4<br>" in content.practical_info)
         self.assertTrue(content.published)
         self.assertEqual(content.category, category)
         self.assertQuerysetEqual(
@@ -69,35 +70,36 @@ class ParserTests(TranslationResetMixin, TestCase):
     def test_create_esprit(self, mocked):
         def mocked_json():
             filename = os.path.join(os.path.dirname(__file__), 'data', 'espritparc.json')
-            with io.open(filename, 'r', encoding='utf8') as f:
+            with io.open(filename, 'rb') as f:
                 return json.load(f)
 
         filename = os.path.join(os.path.dirname(__file__), 'data', 'espritparc.json')
         mocked.return_value.status_code = 200
         mocked.return_value.json = mocked_json
-        FileType.objects.create(type=u"Photographie")
-        category = TouristicContentCategoryFactory(label=u"Miels et produits de la ruche")
-        TouristicContentTypeFactory(label=u"Miel", in_list=1, category=category)
-        TouristicContentTypeFactory(label=u"Gelée royale, propolis et pollen", in_list=1, category=category)
-        TouristicContentTypeFactory(label=u"Pollen", in_list=1, category=category)
-        TouristicContentTypeFactory(label=u"Cire", in_list=1, category=category)
-        TouristicContentTypeFactory(label=u"Hautes Alpes Naturellement", in_list=2, category=category)
-        TouristicContentTypeFactory(label=u"Bienvenue à la ferme", in_list=2, category=category)
-        TouristicContentTypeFactory(label=u"Agriculture biologique", in_list=2, category=category)
+        mocked.return_value.content = b''
+        FileType.objects.create(type="Photographie")
+        category = TouristicContentCategoryFactory(label="Miels et produits de la ruche")
+        TouristicContentTypeFactory(label="Miel", in_list=1, category=category)
+        TouristicContentTypeFactory(label="Gelée royale, propolis et pollen", in_list=1, category=category)
+        TouristicContentTypeFactory(label="Pollen", in_list=1, category=category)
+        TouristicContentTypeFactory(label="Cire", in_list=1, category=category)
+        TouristicContentTypeFactory(label="Hautes Alpes Naturellement", in_list=2, category=category)
+        TouristicContentTypeFactory(label="Bienvenue à la ferme", in_list=2, category=category)
+        TouristicContentTypeFactory(label="Agriculture biologique", in_list=2, category=category)
         call_command('import', 'geotrek.tourism.tests.test_parsers.EspritParc', filename, verbosity=0)
         self.assertEqual(TouristicContent.objects.count(), 24)
         content = TouristicContent.objects.all()
         eid = [
-            u"PDT44", u"PDT46", u"PDT47", u"PDT48", u"PDT51", u"PDT52", u"PDT53", u"PDT93", u"PDT94", u"PDT95",
-            u"PDT186", u"PDT260", u"PDT261", u"PDT842", u"PDT471", u"PDT503", u"PDT504", u"PDT505", u"PDT506",
-            u"PDT795", u"PDT797", u"PDT799", u"PDT836", u"PDT837"
+            "PDT44", "PDT46", "PDT47", "PDT48", "PDT51", "PDT52", "PDT53", "PDT93", "PDT94", "PDT95",
+            "PDT186", "PDT260", "PDT261", "PDT842", "PDT471", "PDT503", "PDT504", "PDT505", "PDT506",
+            "PDT795", "PDT797", "PDT799", "PDT836", "PDT837"
         ]
         name = [
-            u"miel de montagne", u"miel de haute montagne", u"miel de printemps d'embrun",
-            u"gel\xe9e royale de montagne", u"pollen de montagne", u"miel de haute montagne bio", u"miel de for\xeat",
-            u"miel de pissenlit", u"miel de haute montagne du valgaudemar", u"pollen frais de montagne",
-            u"miel de printemps de l'embrunais", u"pollen de fleurs de montagne", u"pain de cire",
-            u"miel de montagne toutes fleurs", u"miel cuv\xe9e sp\xe9ciale d'ancelle", u"miel des ecrins"
+            "miel de montagne", "miel de haute montagne", "miel de printemps d'embrun",
+            "gel\xe9e royale de montagne", "pollen de montagne", "miel de haute montagne bio", "miel de for\xeat",
+            "miel de pissenlit", "miel de haute montagne du valgaudemar", "pollen frais de montagne",
+            "miel de printemps de l'embrunais", "pollen de fleurs de montagne", "pain de cire",
+            "miel de montagne toutes fleurs", "miel cuv\xe9e sp\xe9ciale d'ancelle", "miel des ecrins"
 
         ]
         for one in content:

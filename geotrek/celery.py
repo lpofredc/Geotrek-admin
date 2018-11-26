@@ -3,7 +3,6 @@ from __future__ import absolute_import
 import django
 from celery import Celery
 
-# Setup django project. DJANGO_SETTINGS_MODULE must be set by supervisor.
 django.setup()
 
 app = Celery('geotrek')

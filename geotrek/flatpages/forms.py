@@ -10,12 +10,12 @@ if 'modeltranslation' in settings.INSTALLED_APPS:
 
 
 class FlatPageForm(CommonForm):
-    content = forms.CharField(widget=forms.Textarea, label=_(u"Content"))
+    content = forms.CharField(widget=forms.Textarea, label=_("Content"))
 
     def __init__(self, *args, **kwargs):
         super(FlatPageForm, self).__init__(*args, **kwargs)
         # Revert widget modifications done by MapentityForm.__init__()
-        for fieldname in self.fields.keys():
+        for fieldname in list(self.fields.keys()):
             if fieldname.startswith('content_'):
                 self.fields[fieldname].widget = forms.Textarea()
         self.fields['source'].help_text = None

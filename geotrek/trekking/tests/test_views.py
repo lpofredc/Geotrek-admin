@@ -73,7 +73,7 @@ class POIViewsTest(CommonTest):
         response = self.client.post(self.model.get_add_url(), data)
         self.assertEqual(response.status_code, 200)
         form = self.get_form(response)
-        self.assertEqual(form.errors, {'topology': [u'Topology is empty.']})
+        self.assertEqual(form.errors, {'topology': ['Topology is empty.']})
 
     def test_listing_number_queries(self):
         self.login()
@@ -131,7 +131,7 @@ class POIJSONDetailTest(TrekkingManagerTest):
         self.pk = self.poi.pk
         url = '/api/en/pois/%s.json' % self.pk
         self.response = self.client.get(url)
-        self.result = json.loads(self.response.content)
+        self.result = json.loads(self.response.content.decode())
 
     def test_name(self):
         self.assertEqual(self.result['name'],
@@ -146,7 +146,7 @@ class POIJSONDetailTest(TrekkingManagerTest):
 
     def test_published_status(self):
         self.assertDictEqual(self.result['published_status'][0],
-                             {u'lang': u'en', u'status': True, u'language': u'English'})
+                             {'lang': 'en', 'status': True, 'language': 'English'})
 
     def test_type(self):
         self.assertDictEqual(self.result['type'],
@@ -163,8 +163,8 @@ class POIJSONDetailTest(TrekkingManagerTest):
 
     def test_districts(self):
         self.assertDictEqual(self.result['districts'][0],
-                             {u"id": self.district.id,
-                              u"name": self.district.name})
+                             {"id": self.district.id,
+                              "name": self.district.name})
 
     def test_related_urls(self):
         self.assertEqual(self.result['map_image_url'],
@@ -175,14 +175,14 @@ class POIJSONDetailTest(TrekkingManagerTest):
     def test_touristic_contents(self):
         self.assertEqual(len(self.result['touristic_contents']), 1)
         self.assertDictEqual(self.result['touristic_contents'][0], {
-            u'id': self.touristic_content.pk,
-            u'category_id': self.touristic_content.prefixed_category_id})
+            'id': self.touristic_content.pk,
+            'category_id': self.touristic_content.prefixed_category_id})
 
     def test_touristic_events(self):
         self.assertEqual(len(self.result['touristic_events']), 1)
         self.assertDictEqual(self.result['touristic_events'][0], {
-            u'id': self.touristic_event.pk,
-            u'category_id': 'E'})
+            'id': self.touristic_event.pk,
+            'category_id': 'E'})
 
 
 class TrekViewsTest(CommonTest):
@@ -196,7 +196,7 @@ class TrekViewsTest(CommonTest):
             ('trek_relationship_a-TOTAL_FORMS', '0'),
             ('trek_relationship_a-INITIAL_FORMS', '1'),
             ('trek_relationship_a-MAX_NUM_FORMS', '0'),
-        ]), u'This field is required.'
+        ]), 'This field is required.'
 
     def get_good_data(self):
         path = PathFactory.create()
@@ -267,7 +267,7 @@ class TrekViewsTest(CommonTest):
 
     def test_basic_format(self):
         super(TrekViewsTest, self).test_basic_format()
-        self.modelfactory.create(name=u"ukélélé")  # trek with utf8
+        self.modelfactory.create(name="ukélélé")  # trek with utf8
         for fmt in ('csv', 'shp', 'gpx'):
             response = self.client.get(self.model.get_format_list_url() + '?format=' + fmt)
             self.assertEqual(response.status_code, 200)
@@ -276,7 +276,7 @@ class TrekViewsTest(CommonTest):
         self.login()
         response = self.client.get(self.model.get_add_url())
         self.assertEqual(response.status_code, 200)
-        self.assertNotIn('pois_excluded', response.content)
+        self.assertNotIn(b'pois_excluded', response.content)
 
     def test_pois_detached_update(self):
         self.login()
@@ -318,7 +318,7 @@ class TrekCustomViewTests(TrekkingManagerTest):
         url = '/api/en/treks/{pk}/pois.geojson'.format(pk=trek.pk)
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
-        poislayer = json.loads(response.content)
+        poislayer = json.loads(response.content.decode())
         poifeature = poislayer['features'][0]
         self.assertTrue('thumbnail' in poifeature['properties'])
         self.assertEqual(len(poislayer['features']), 1)
@@ -334,7 +334,7 @@ class TrekCustomViewTests(TrekkingManagerTest):
         url = '/api/en/treks/{pk}/services.geojson'.format(pk=trek.pk)
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
-        serviceslayer = json.loads(response.content)
+        serviceslayer = json.loads(response.content.decode())
         servicefeature = serviceslayer['features'][0]
         self.assertTrue('type' in servicefeature['properties'])
 
@@ -392,7 +392,7 @@ class TrekCustomViewTests(TrekkingManagerTest):
 class TrekCustomPublicViewTests(TrekkingManagerTest):
     @mock.patch('djappypod.backend.os.path.exists', create=True)
     def test_overriden_public_template(self, exists_patched):
-        overriden_template = os.path.join(settings.MEDIA_ROOT, 'templates', 'trekking', 'trek_public.odt')
+        overriden_template = os.path.join(settings.VAR_DIR, 'conf', 'extra_templates', 'trekking', 'trek_public.odt')
 
         def fake_exists(path):
             return path == overriden_template
@@ -516,7 +516,7 @@ class TrekJSONSetUp(TrekkingManagerTest):
         self.pk = self.trek.pk
         url = '/api/en/treks/{pk}.json'.format(pk=self.pk)
         self.response = self.client.get(url)
-        self.result = json.loads(self.response.content)
+        self.result = json.loads(self.response.content.decode())
 
 
 @override_settings(SPLIT_TREKS_CATEGORIES_BY_PRACTICE=True)
@@ -555,110 +555,110 @@ class TrekJSONDetailTest(TrekJSONSetUp):
 
     def test_published_status(self):
         self.assertDictEqual(self.result['published_status'][0],
-                             {u'lang': u'en', u'status': True, u'language': u'English'})
+                             {'lang': 'en', 'status': True, 'language': 'English'})
 
     def test_pictures(self):
         self.assertDictEqual(self.result['pictures'][0],
-                             {u'url': os.path.join(settings.MEDIA_URL,
-                                                   self.attachment.attachment_file.name) + '.800x800_q85.png',
-                              u'title': self.attachment.title,
-                              u'legend': self.attachment.legend,
-                              u'author': self.attachment.author})
+                             {'url': os.path.join(settings.MEDIA_URL,
+                                                  self.attachment.attachment_file.name) + '.800x800_q85.png',
+                              'title': self.attachment.title,
+                              'legend': self.attachment.legend,
+                              'author': self.attachment.author})
 
     def test_cities(self):
         self.assertDictEqual(self.result['cities'][0],
-                             {u"code": self.city.code,
-                              u"name": self.city.name})
+                             {"code": self.city.code,
+                              "name": self.city.name})
 
     def test_districts(self):
         self.assertDictEqual(self.result['districts'][0],
-                             {u"id": self.district.id,
-                              u"name": self.district.name})
+                             {"id": self.district.id,
+                              "name": self.district.name})
 
     def test_networks(self):
         self.assertDictEqual(self.result['networks'][0],
-                             {u"id": self.network.id,
-                              u"pictogram": None,
-                              u"name": self.network.network})
+                             {"id": self.network.id,
+                              "pictogram": None,
+                              "name": self.network.network})
 
     def test_practice_not_none(self):
         self.assertDictEqual(self.result['practice'],
-                             {u"id": self.trek.practice.id,
-                              u"pictogram": os.path.join(settings.MEDIA_URL, self.trek.practice.pictogram.name),
-                              u"label": self.trek.practice.name})
+                             {"id": self.trek.practice.id,
+                              "pictogram": os.path.join(settings.MEDIA_URL, self.trek.practice.pictogram.name),
+                              "label": self.trek.practice.name})
 
     def test_usages(self):  # Rando v1 compat
         self.assertDictEqual(self.result['usages'][0],
-                             {u"id": self.trek.practice.id,
-                              u"pictogram": os.path.join(settings.MEDIA_URL, self.trek.practice.pictogram.name),
-                              u"label": self.trek.practice.name})
+                             {"id": self.trek.practice.id,
+                              "pictogram": os.path.join(settings.MEDIA_URL, self.trek.practice.pictogram.name),
+                              "label": self.trek.practice.name})
 
     def test_accessibilities(self):
         self.assertDictEqual(self.result['accessibilities'][0],
-                             {u"id": self.accessibility.id,
-                              u"pictogram": os.path.join(settings.MEDIA_URL, self.accessibility.pictogram.name),
-                              u"label": self.accessibility.name})
+                             {"id": self.accessibility.id,
+                              "pictogram": os.path.join(settings.MEDIA_URL, self.accessibility.pictogram.name),
+                              "label": self.accessibility.name})
 
     def test_themes(self):
         self.assertDictEqual(self.result['themes'][0],
-                             {u"id": self.theme.id,
-                              u"pictogram": os.path.join(settings.MEDIA_URL, self.theme.pictogram.name),
-                              u"label": self.theme.label})
+                             {"id": self.theme.id,
+                              "pictogram": os.path.join(settings.MEDIA_URL, self.theme.pictogram.name),
+                              "label": self.theme.label})
 
     def test_weblinks(self):
         self.assertDictEqual(self.result['web_links'][0],
-                             {u"id": self.weblink.id,
-                              u"url": self.weblink.url,
-                              u"name": self.weblink.name,
-                              u"category": {
-                                  u"id": self.weblink.category.id,
-                                  u"pictogram": os.path.join(settings.MEDIA_URL, self.weblink.category.pictogram.name),
-                                  u"label": self.weblink.category.label}
+                             {"id": self.weblink.id,
+                              "url": self.weblink.url,
+                              "name": self.weblink.name,
+                              "category": {
+                                  "id": self.weblink.category.id,
+                                  "pictogram": os.path.join(settings.MEDIA_URL, self.weblink.category.pictogram.name),
+                                  "label": self.weblink.category.label}
                               })
 
     def test_route_not_none(self):
         self.assertDictEqual(self.result['route'],
-                             {u"id": self.trek.route.id,
-                              u"pictogram": None,
-                              u"label": self.trek.route.route})
+                             {"id": self.trek.route.id,
+                              "pictogram": None,
+                              "label": self.trek.route.route})
 
     def test_difficulty_not_none(self):
         self.assertDictEqual(self.result['difficulty'],
-                             {u"id": self.trek.difficulty.id,
-                              u"pictogram": os.path.join(settings.MEDIA_URL, self.trek.difficulty.pictogram.name),
-                              u"label": self.trek.difficulty.difficulty})
+                             {"id": self.trek.difficulty.id,
+                              "pictogram": os.path.join(settings.MEDIA_URL, self.trek.difficulty.pictogram.name),
+                              "label": self.trek.difficulty.difficulty})
 
     def test_information_desks(self):
         desk_type = self.information_desk.type
         self.maxDiff = None
         self.assertDictEqual(self.result['information_desks'][0],
-                             {u'description': self.information_desk.description,
-                              u'email': self.information_desk.email,
-                              u'latitude': self.information_desk.latitude,
-                              u'longitude': self.information_desk.longitude,
-                              u'name': self.information_desk.name,
-                              u'phone': self.information_desk.phone,
-                              u'photo_url': self.information_desk.photo_url,
-                              u'postal_code': self.information_desk.postal_code,
-                              u'street': self.information_desk.street,
-                              u'municipality': self.information_desk.municipality,
-                              u'website': self.information_desk.website,
-                              u'type': {
-                                  u'id': desk_type.id,
-                                  u'pictogram': desk_type.pictogram.url,
-                                  u'label': desk_type.label}})
+                             {'description': self.information_desk.description,
+                              'email': self.information_desk.email,
+                              'latitude': self.information_desk.latitude,
+                              'longitude': self.information_desk.longitude,
+                              'name': self.information_desk.name,
+                              'phone': self.information_desk.phone,
+                              'photo_url': self.information_desk.photo_url,
+                              'postal_code': self.information_desk.postal_code,
+                              'street': self.information_desk.street,
+                              'municipality': self.information_desk.municipality,
+                              'website': self.information_desk.website,
+                              'type': {
+                                  'id': desk_type.id,
+                                  'pictogram': desk_type.pictogram.url,
+                                  'label': desk_type.label}})
 
     def test_relationships(self):
         self.assertDictEqual(self.result['relationships'][0],
-                             {u'published': self.trek_b.published,
-                              u'has_common_departure': True,
-                              u'has_common_edge': False,
-                              u'is_circuit_step': True,
-                              u'trek': {u'pk': self.trek_b.pk,
-                                        u'id': self.trek_b.id,
-                                        u'slug': self.trek_b.slug,
-                                        u'category_slug': u'trek',
-                                        u'name': self.trek_b.name}})
+                             {'published': self.trek_b.published,
+                              'has_common_departure': True,
+                              'has_common_edge': False,
+                              'is_circuit_step': True,
+                              'trek': {'pk': self.trek_b.pk,
+                                       'id': self.trek_b.id,
+                                       'slug': self.trek_b.slug,
+                                       'category_slug': 'trek',
+                                       'name': self.trek_b.name}})
 
     def test_parking_location_in_wgs84(self):
         parking_location = self.result['parking_location']
@@ -672,46 +672,46 @@ class TrekJSONDetailTest(TrekJSONSetUp):
     def test_touristic_contents(self):
         self.assertEqual(len(self.result['touristic_contents']), 1)
         self.assertDictEqual(self.result['touristic_contents'][0], {
-            u'id': self.touristic_content.pk,
-            u'category_id': self.touristic_content.prefixed_category_id})
+            'id': self.touristic_content.pk,
+            'category_id': self.touristic_content.prefixed_category_id})
 
     def test_touristic_events(self):
         self.assertEqual(len(self.result['touristic_events']), 1)
         self.assertDictEqual(self.result['touristic_events'][0], {
-            u'id': self.touristic_event.pk,
-            u'category_id': self.touristic_event.prefixed_category_id})
+            'id': self.touristic_event.pk,
+            'category_id': self.touristic_event.prefixed_category_id})
 
     def test_close_treks(self):
         self.assertEqual(len(self.result['treks']), 1)
         self.assertDictEqual(self.result['treks'][0], {
-            u'id': self.trek_b.pk,
-            u'category_id': self.trek_b.prefixed_category_id})
+            'id': self.trek_b.pk,
+            'category_id': self.trek_b.prefixed_category_id})
 
     def test_type2(self):
         self.assertDictEqual(self.result['type2'][0],
-                             {u"id": self.accessibility.id,
-                              u"pictogram": os.path.join(settings.MEDIA_URL, self.accessibility.pictogram.name),
-                              u"name": self.accessibility.name})
+                             {"id": self.accessibility.id,
+                              "pictogram": os.path.join(settings.MEDIA_URL, self.accessibility.pictogram.name),
+                              "name": self.accessibility.name})
 
     def test_category(self):
         self.assertDictEqual(self.result['category'],
-                             {u"id": 'T',
-                              u"order": 1,
-                              u"label": u"Hike",
-                              u"slug": u"trek",
-                              u"type2_label": u"Accessibility",
-                              u"pictogram": u"/static/trekking/trek.svg"})
+                             {"id": 'T',
+                              "order": 1,
+                              "label": "Hike",
+                              "slug": "trek",
+                              "type2_label": "Accessibility",
+                              "pictogram": "/static/trekking/trek.svg"})
 
     def test_sources(self):
         self.assertDictEqual(self.result['source'][0], {
-            u'name': self.source.name,
-            u'website': self.source.website,
-            u"pictogram": os.path.join(settings.MEDIA_URL, self.source.pictogram.name)})
+            'name': self.source.name,
+            'website': self.source.website,
+            "pictogram": os.path.join(settings.MEDIA_URL, self.source.pictogram.name)})
 
     def portals(self):
         self.assertDictEqual(self.result['portal'][0], {
-            u'name': self.portal.name,
-            u'website': self.portal.website, })
+            'name': self.portal.name,
+            'website': self.portal.website, })
 
     def test_children(self):
         self.assertEqual(self.result['children'], [self.child2.pk, self.child1.pk])
@@ -721,11 +721,11 @@ class TrekJSONDetailTest(TrekJSONSetUp):
 
     def test_previous(self):
         self.assertDictEqual(self.result['previous'],
-                             {u"%s" % self.parent.pk: None})
+                             {"%s" % self.parent.pk: None})
 
     def test_next(self):
         self.assertDictEqual(self.result['next'],
-                             {u"%s" % self.parent.pk: self.sibling.pk})
+                             {"%s" % self.parent.pk: self.sibling.pk})
 
     def test_picture_print(self):
         self.assertIn(self.attachment.attachment_file.name, self.trek.picture_print.name)
@@ -814,10 +814,10 @@ class TrekGPXTest(TrekkingManagerTest):
         name = waypoint.find('name').string
         description = waypoint.find('desc').string
         elevation = waypoint.find('ele').string
-        self.assertEqual(name, u"%s: %s" % (pois[0].type, pois[0].name))
+        self.assertEqual(name, "%s: %s" % (pois[0].type, pois[0].name))
         self.assertEqual(description, pois[0].description)
-        self.assertEqual(waypoint['lat'], '46.5003601787')
-        self.assertEqual(waypoint['lon'], '3.00052158552')
+        self.assertEqual(waypoint['lat'], '46.50036017874059')
+        self.assertEqual(waypoint['lon'], '3.000521585520085')
         self.assertEqual(elevation, '42.0')
 
 
@@ -845,7 +845,7 @@ class TrekViewTranslationTest(TrekkingManagerTest):
                 self.assertEqual(response.status_code, 404)
             else:
                 self.assertEqual(response.status_code, 200)
-                obj = json.loads(response.content)
+                obj = json.loads(response.content.decode())
                 self.assertEqual(obj['name'], expected)
 
     def test_geojson_translation(self):
@@ -856,7 +856,7 @@ class TrekViewTranslationTest(TrekkingManagerTest):
             self.login()
             response = self.client.get(url, HTTP_ACCEPT_LANGUAGE=lang)
             self.assertEqual(response.status_code, 200)
-            obj = json.loads(response.content)
+            obj = json.loads(response.content.decode())
             self.assertEqual(obj['features'][0]['properties']['name'], expected)
             self.client.logout()  # Django 1.6 keeps language in session
 
@@ -868,7 +868,7 @@ class TrekViewTranslationTest(TrekkingManagerTest):
             self.login()
             response = self.client.get(url, HTTP_ACCEPT_LANGUAGE=lang)
             self.assertEqual(response.status_code, 200)
-            obj = json.loads(response.content)
+            obj = json.loads(response.content.decode())
             self.assertEqual(obj['features'][0]['properties']['published'], expected)
             self.client.logout()  # Django 1.6 keeps language in session
 
@@ -895,7 +895,7 @@ class TrekViewTranslationTest(TrekkingManagerTest):
             self.login()
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
-            obj = json.loads(response.content)
+            obj = json.loads(response.content.decode())
             jsonpoi = obj.get('features', [])[0]
             self.assertEqual(jsonpoi.get('properties', {}).get('name'), expected)
             self.client.logout()  # Django 1.6 keeps language in session
@@ -903,20 +903,20 @@ class TrekViewTranslationTest(TrekkingManagerTest):
 
 class TemplateTagsTest(TestCase):
     def test_duration(self):
-        self.assertEqual(u"15 min", trekking_tags.duration(0.25))
-        self.assertEqual(u"30 min", trekking_tags.duration(0.5))
-        self.assertEqual(u"1 h", trekking_tags.duration(1))
-        self.assertEqual(u"1 h 45", trekking_tags.duration(1.75))
-        self.assertEqual(u"3 h 30", trekking_tags.duration(3.5))
-        self.assertEqual(u"4 h", trekking_tags.duration(4))
-        self.assertEqual(u"6 h", trekking_tags.duration(6))
-        self.assertEqual(u"10 h", trekking_tags.duration(10))
-        self.assertEqual(u"1 days", trekking_tags.duration(24))
-        self.assertEqual(u"2 days", trekking_tags.duration(32))
-        self.assertEqual(u"2 days", trekking_tags.duration(48))
-        self.assertEqual(u"3 days", trekking_tags.duration(49))
-        self.assertEqual(u"8 days", trekking_tags.duration(24 * 8))
-        self.assertEqual(u"9 days", trekking_tags.duration(24 * 9))
+        self.assertEqual("15 min", trekking_tags.duration(0.25))
+        self.assertEqual("30 min", trekking_tags.duration(0.5))
+        self.assertEqual("1 h", trekking_tags.duration(1))
+        self.assertEqual("1 h 45", trekking_tags.duration(1.75))
+        self.assertEqual("3 h 30", trekking_tags.duration(3.5))
+        self.assertEqual("4 h", trekking_tags.duration(4))
+        self.assertEqual("6 h", trekking_tags.duration(6))
+        self.assertEqual("10 h", trekking_tags.duration(10))
+        self.assertEqual("1 days", trekking_tags.duration(24))
+        self.assertEqual("2 days", trekking_tags.duration(32))
+        self.assertEqual("2 days", trekking_tags.duration(48))
+        self.assertEqual("3 days", trekking_tags.duration(49))
+        self.assertEqual("8 days", trekking_tags.duration(24 * 8))
+        self.assertEqual("9 days", trekking_tags.duration(24 * 9))
 
 
 class TrekViewsSameStructureTests(AuthentFixturesTest):
@@ -925,7 +925,7 @@ class TrekViewsSameStructureTests(AuthentFixturesTest):
                                             user__password='dooh',
                                             language='en')
         self.user = profile.user
-        self.user.groups.add(Group.objects.get(name=u"Référents communication"))
+        self.user.groups.add(Group.objects.get(name="Référents communication"))
         self.client.login(username='homer', password='dooh')
         self.content1 = TrekFactory.create()
         structure = StructureFactory.create()
@@ -999,7 +999,7 @@ class POIViewsSameStructureTests(TranslationResetMixin, AuthentFixturesTest):
         profile = UserProfileFactory.create(user__username='homer',
                                             user__password='dooh')
         user = profile.user
-        user.groups.add(Group.objects.get(name=u"Référents communication"))
+        user.groups.add(Group.objects.get(name="Référents communication"))
         self.client.login(username=user.username, password='dooh')
         self.content1 = POIFactory.create()
         structure = StructureFactory.create()
@@ -1059,7 +1059,7 @@ class CirkwiTests(TranslationResetMixin, TestCase):
             'poi_description': self.poi.description.replace('<p>', '').replace('</p>', ''),
         }
         self.assertXMLEqual(
-            response.content,
+            response.content.decode('utf-8'),
             '<?xml version="1.0" encoding="utf8"?>\n'
             '<circuits version="2">'
             '<circuit id_circuit="{pk}" date_modification="{date_update}" date_creation="1388534400">'
@@ -1086,7 +1086,7 @@ class CirkwiTests(TranslationResetMixin, TestCase):
             '<informations>'
             '<information langue="en"><titre>{poi_title}</titre><description>{poi_description}</description></information>'
             '</informations>'
-            '<adresse><position><lat>46.5</lat><lng>3.0</lng></position></adresse>'
+            '<adresse><position><lat>46.499999999999936</lat><lng>3.0000000000000004</lng></position></adresse>'
             '</poi>'
             '</pois>'
             '</circuit>'
@@ -1102,14 +1102,14 @@ class CirkwiTests(TranslationResetMixin, TestCase):
             'date_update': timestamp(self.poi.date_update),
         }
         self.assertXMLEqual(
-            response.content,
+            response.content.decode('utf-8'),
             '<?xml version="1.0" encoding="utf8"?>\n'
             '<pois version="2">'
             '<poi id_poi="{pk}" date_modification="{date_update}" date_creation="1388534400">'
             '<informations>'
             '<information langue="en"><titre>{title}</titre><description>{description}</description></information>'
             '</informations>'
-            '<adresse><position><lat>46.5</lat><lng>3.0</lng></position></adresse>'
+            '<adresse><position><lat>46.499999999999936</lat><lng>2.9999999999999996</lng></position></adresse>'
             '</poi>'
             '</pois>'.format(**attrs))
 
@@ -1124,7 +1124,7 @@ class CirkwiTests(TranslationResetMixin, TestCase):
             'date_update': timestamp(self.poi.date_update),
         }
         self.assertXMLEqual(
-            response.content,
+            response.content.decode('utf-8'),
             '<?xml version="1.0" encoding="utf8"?>\n'
             '<pois version="2">'
             '<poi id_poi="{pk}" date_modification="{date_update}" date_creation="1388534400">'
@@ -1134,7 +1134,7 @@ class CirkwiTests(TranslationResetMixin, TestCase):
             '<information langue="fr"><titre>{title}</titre><description>{description}</description></information>'
             '<information langue="it"><titre>{title}</titre><description>{description}</description></information>'
             '</informations>'
-            '<adresse><position><lat>46.5</lat><lng>3.0</lng></position></adresse>'
+            '<adresse><position><lat>46.499999999999936</lat><lng>2.9999999999999996</lng></position></adresse>'
             '</poi>'
             '</pois>'.format(**attrs))
 
@@ -1184,7 +1184,7 @@ class ServiceViewsTest(CommonTest):
         response = self.client.post(self.model.get_add_url(), data)
         self.assertEqual(response.status_code, 200)
         form = self.get_form(response)
-        self.assertEqual(form.errors, {'topology': [u'Topology is empty.']})
+        self.assertEqual(form.errors, {'topology': ['Topology is empty.']})
 
     def test_listing_number_queries(self):
         self.login()
@@ -1214,14 +1214,14 @@ class ServiceJSONTest(TrekkingManagerTest):
     def test_list(self):
         url = '/api/en/services.json'
         self.response = self.client.get(url)
-        self.result = json.loads(self.response.content)
+        self.result = json.loads(self.response.content.decode())
         self.assertEqual(len(self.result), 1)
         self.assertTrue('type' in self.result[0])
 
     def test_detail(self):
         url = '/api/en/services/%s.json' % self.pk
         self.response = self.client.get(url)
-        self.result = json.loads(self.response.content)
+        self.result = json.loads(self.response.content.decode())
         self.assertDictEqual(self.result['type'],
                              {'id': self.service.type.pk,
                               'name': self.service.type.name,

@@ -121,12 +121,12 @@ class Command(BaseCommand):
         zipname = os.path.join('zip', 'tiles', 'global.zip')
 
         if self.verbosity == 2:
-            self.stdout.write(u"\x1b[36m**\x1b[0m \x1b[1m{name}\x1b[0m ...".format(name=zipname), ending="")
+            self.stdout.write("\x1b[36m**\x1b[0m \x1b[1m{name}\x1b[0m ...".format(name=zipname), ending="")
             self.stdout.flush()
 
         global_extent = settings.LEAFLET_CONFIG['SPATIAL_EXTENT']
 
-        logger.info("Global extent is %s" % unicode(global_extent))
+        logger.info("Global extent is %s" % str(global_extent))
         global_file = os.path.join(self.tmp_root, zipname)
 
         logger.info("Build global tiles file...")
@@ -146,7 +146,7 @@ class Command(BaseCommand):
         zipname = os.path.join('zip', 'tiles', '{pk}.zip'.format(pk=trek.pk))
 
         if self.verbosity == 2:
-            self.stdout.write(u"\x1b[36m**\x1b[0m \x1b[1m{name}\x1b[0m ...".format(name=zipname), ending="")
+            self.stdout.write("\x1b[36m**\x1b[0m \x1b[1m{name}\x1b[0m ...".format(name=zipname), ending="")
             self.stdout.flush()
 
         trek_file = os.path.join(self.tmp_root, zipname)
@@ -177,7 +177,7 @@ class Command(BaseCommand):
 
     def sync_view(self, lang, view, name, url='/', params={}, zipfile=None, **kwargs):
         if self.verbosity == 2:
-            self.stdout.write(u"\x1b[36m{lang}\x1b[0m \x1b[1m{name}\x1b[0m ...".format(lang=lang, name=name), ending="")
+            self.stdout.write("\x1b[36m{lang}\x1b[0m \x1b[1m{name}\x1b[0m ...".format(lang=lang, name=name), ending="")
             self.stdout.flush()
         fullname = os.path.join(self.tmp_root, name)
         self.mkdirs(fullname)
@@ -191,18 +191,20 @@ class Command(BaseCommand):
         except Exception as e:
             self.successfull = False
             if self.verbosity == 2:
-                self.stdout.write(u"\x1b[3D\x1b[31mfailed ({})\x1b[0m".format(e))
+                self.stdout.write("\x1b[3D\x1b[31mfailed ({})\x1b[0m".format(e))
             return
         if response.status_code != 200:
             self.successfull = False
             if self.verbosity == 2:
-                self.stdout.write(u"\x1b[3D\x1b[31;1mfailed (HTTP {code})\x1b[0m".format(code=response.status_code))
+                self.stdout.write("\x1b[3D\x1b[31;1mfailed (HTTP {code})\x1b[0m".format(code=response.status_code))
             return
         f = open(fullname, 'w')
         if isinstance(response, StreamingHttpResponse):
-            content = b''.join(response.streaming_content)
+            content = ''
+            for sc in response.streaming_content:
+                content += sc.decode()
         else:
-            content = response.content
+            content = response.content.decode()
         f.write(content)
         f.close()
         oldfilename = os.path.join(self.dst_root, name)
@@ -211,10 +213,10 @@ class Command(BaseCommand):
             os.unlink(fullname)
             os.link(oldfilename, fullname)
             if self.verbosity == 2:
-                self.stdout.write(u"\x1b[3D\x1b[32munchanged\x1b[0m")
+                self.stdout.write("\x1b[3D\x1b[32munchanged\x1b[0m")
         else:
             if self.verbosity == 2:
-                self.stdout.write(u"\x1b[3D\x1b[32mgenerated\x1b[0m")
+                self.stdout.write("\x1b[3D\x1b[32mgenerated\x1b[0m")
         # FixMe: Find why there are duplicate files.
         if zipfile:
             if name not in zipfile.namelist():
@@ -237,14 +239,14 @@ class Command(BaseCommand):
         if self.source:
             params['source'] = ','.join(self.source)
 
-        elif 'source' in params.keys():
+        elif 'source' in list(params.keys()):
             # bug source is still in cache when executing command
             del params['source']
 
         if self.portal:
             params['portal'] = ','.join(self.portal)
 
-        elif 'portal' in params.keys():
+        elif 'portal' in list(params.keys()):
             del params['portal']
 
         self.sync_view(lang, view, name, params=params, zipfile=zipfile, **kwargs)
@@ -332,7 +334,7 @@ class Command(BaseCommand):
         if zipfile:
             zipfile.write(dst, os.path.join(url, name))
         if self.verbosity == 2:
-            self.stdout.write(u"\x1b[36m{lang}\x1b[0m \x1b[1m{url}/{name}\x1b[0m \x1b[32mcopied\x1b[0m".format(lang=lang, url=url, name=name))
+            self.stdout.write("\x1b[36m{lang}\x1b[0m \x1b[1m{url}/{name}\x1b[0m \x1b[32mcopied\x1b[0m".format(lang=lang, url=url, name=name))
 
     def sync_static_file(self, lang, name):
         self.sync_file(lang, name, settings.STATIC_ROOT, settings.STATIC_URL)
@@ -393,7 +395,7 @@ class Command(BaseCommand):
             self.sync_trek_sensitiveareas(lang, trek)
 
         if self.verbosity == 2:
-            self.stdout.write(u"\x1b[36m{lang}\x1b[0m \x1b[1m{name}\x1b[0m ...".format(lang=lang, name=zipname),
+            self.stdout.write("\x1b[36m{lang}\x1b[0m \x1b[1m{name}\x1b[0m ...".format(lang=lang, name=zipname),
                               ending="")
 
         self.close_zip(self.trek_zipfile, zipname)
@@ -418,9 +420,9 @@ class Command(BaseCommand):
 
         if self.verbosity == 2:
             if uptodate:
-                self.stdout.write(u"\x1b[3D\x1b[32munchanged\x1b[0m")
+                self.stdout.write("\x1b[3D\x1b[32munchanged\x1b[0m")
             else:
-                self.stdout.write(u"\x1b[3D\x1b[32mzipped\x1b[0m")
+                self.stdout.write("\x1b[3D\x1b[32mzipped\x1b[0m")
 
     def sync_flatpages(self, lang):
         self.sync_geojson(lang, FlatPageViewSet, 'flatpages.geojson', zipfile=self.zipfile)
@@ -485,7 +487,7 @@ class Command(BaseCommand):
             self.sync_sensitiveareas(lang)
 
         if self.verbosity == 2:
-            self.stdout.write(u"\x1b[36m{lang}\x1b[0m \x1b[1m{name}\x1b[0m ...".format(lang=lang, name=zipname), ending="")
+            self.stdout.write("\x1b[36m{lang}\x1b[0m \x1b[1m{name}\x1b[0m ...".format(lang=lang, name=zipname), ending="")
 
         self.close_zip(self.zipfile, zipname)
 
@@ -499,7 +501,7 @@ class Command(BaseCommand):
                         'name': self.celery_task.name,
                         'current': 10,
                         'total': 100,
-                        'infos': u"{}".format(_(u"Global tiles syncing ..."))
+                        'infos': "{}".format(_("Global tiles syncing ..."))
                     }
                 )
 
@@ -512,7 +514,7 @@ class Command(BaseCommand):
                         'name': self.celery_task.name,
                         'current': 20,
                         'total': 100,
-                        'infos': u"{}".format(_(u"Trek tiles syncing ..."))
+                        'infos': "{}".format(_("Trek tiles syncing ..."))
                     }
                 )
 
@@ -534,7 +536,7 @@ class Command(BaseCommand):
                         'name': self.celery_task.name,
                         'current': 30,
                         'total': 100,
-                        'infos': u"{}".format(_(u"Tiles synced ..."))
+                        'infos': "{}".format(_("Tiles synced ..."))
                     }
                 )
 
@@ -692,7 +694,7 @@ class Command(BaseCommand):
                         'name': self.celery_task.name,
                         'current': current_value + step_value,
                         'total': 100,
-                        'infos': u"{} : {} ...".format(_(u"Language"), lang)
+                        'infos': "{} : {} ...".format(_("Language"), lang)
                     }
                 )
                 current_value = current_value + step_value
@@ -713,7 +715,7 @@ class Command(BaseCommand):
         existing = set([os.path.basename(p) for p in os.listdir(self.dst_root)])
         remaining = existing - set(('api', 'media', 'meta', 'static', 'zip'))
         if remaining:
-            raise CommandError(u"Destination directory contains extra data")
+            raise CommandError("Destination directory contains extra data")
 
     def rename_root(self):
         if os.path.exists(self.dst_root):
@@ -738,6 +740,8 @@ class Command(BaseCommand):
             self.rando_url = self.rando_url[:-1]
         self.factory = RequestFactory()
         self.tmp_root = os.path.join(os.path.dirname(self.dst_root), 'tmp_sync_rando')
+        if os.path.exists(self.tmp_root):
+            shutil.rmtree(self.tmp_root)
         os.mkdir(self.tmp_root)
         self.skip_pdf = options['skip_pdf']
         self.skip_tiles = options['skip_tiles']
@@ -750,8 +754,8 @@ class Command(BaseCommand):
             self.languages = settings.MODELTRANSLATION_LANGUAGES
         self.with_events = options.get('with_events', False)
         self.categories = None
-        if options.get('content_categories', u""):
-            self.categories = options.get('content_categories', u"").split(',')
+        if options.get('content_categories', ""):
+            self.categories = options.get('content_categories', "").split(',')
         self.celery_task = options.get('task', None)
 
         if self.source is not None:
@@ -771,7 +775,7 @@ class Command(BaseCommand):
             'tiles_url': tiles_url,
             'tiles_headers': {"Referer": self.referer},
             'ignore_errors': True,
-            'tiles_dir': os.path.join(settings.DEPLOY_ROOT, 'var', 'tiles'),
+            'tiles_dir': os.path.join(settings.VAR_DIR, 'tiles'),
         }
         try:
             self.sync()
@@ -782,7 +786,7 @@ class Command(BaseCommand):
                         'name': self.celery_task.name,
                         'current': 100,
                         'total': 100,
-                        'infos': u"{}".format(_(u"Sync ended"))
+                        'infos': "{}".format(_("Sync ended"))
                     }
                 )
         except Exception:

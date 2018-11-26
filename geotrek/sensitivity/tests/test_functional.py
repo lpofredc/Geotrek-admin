@@ -20,7 +20,7 @@ class SensitiveAreaViewsTests(CommonTest):
     def get_bad_data(self):
         return {
             'geom': 'doh!'
-        }, _(u'Invalid geometry value.')
+        }, _('Invalid geometry value.')
 
     def get_good_data(self):
         return {
@@ -42,11 +42,11 @@ class RegulatorySensitiveAreaViewsTests(CommonTest):
     def get_bad_data(self):
         return {
             'geom': 'doh!'
-        }, _(u'Invalid geometry value.')
+        }, _('Invalid geometry value.')
 
     def get_good_data(self):
         return {
-            'name': u'Test',
+            'name': 'Test',
             'practices': [SportPracticeFactory.create().pk],
             'geom': '{"type": "Polygon", "coordinates":[[[0, 0], [0, 1], [1, 0], [0, 0]]]}',
             'structure': str(self.user.profile.structure.pk),

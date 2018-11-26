@@ -18,11 +18,11 @@ class SensitiveAreaViewsSameStructureTests(AuthentFixturesTest):
         profile = UserProfileFactory.create(user__username='homer',
                                             user__password='dooh')
         user = profile.user
-        user.user_permissions.add(Permission.objects.get(codename=u"add_sensitivearea"))
-        user.user_permissions.add(Permission.objects.get(codename=u"change_sensitivearea"))
-        user.user_permissions.add(Permission.objects.get(codename=u"delete_sensitivearea"))
-        user.user_permissions.add(Permission.objects.get(codename=u"read_sensitivearea"))
-        user.user_permissions.add(Permission.objects.get(codename=u"export_sensitivearea"))
+        user.user_permissions.add(Permission.objects.get(codename="add_sensitivearea"))
+        user.user_permissions.add(Permission.objects.get(codename="change_sensitivearea"))
+        user.user_permissions.add(Permission.objects.get(codename="delete_sensitivearea"))
+        user.user_permissions.add(Permission.objects.get(codename="read_sensitivearea"))
+        user.user_permissions.add(Permission.objects.get(codename="export_sensitivearea"))
         self.client.login(username=user.username, password='dooh')
         self.area1 = SensitiveAreaFactory.create()
         structure = StructureFactory.create()
@@ -81,35 +81,35 @@ class BasicJSONAPITest(TranslationResetMixin, TrekkingManagerTest):
         self.pk = self.sensitivearea.pk
         url = '/api/en/sensitiveareas/{pk}.json'.format(pk=self.pk)
         self.response = self.client.get(url)
-        self.result = json.loads(self.response.content)
+        self.result = json.loads(self.response.content.decode())
 
     def test_expected_properties(self):
         self.assertDictEqual(self.result, {
-            u'id': self.pk,
-            u'publication_date': unicode(self.sensitivearea.publication_date.strftime('%Y-%m-%d')),
-            u'published': True,
-            u'description': u"Blabla",
-            u'contact': u'<a href="mailto:toto@tata.com">toto@tata.com</a>',
-            u'kml_url': u'/api/en/sensitiveareas/{pk}.kml'.format(pk=self.pk),
-            u'geometry': {
-                u'type': u'Polygon',
-                u'coordinates': [[
-                    [3.0000000000000004, 46.49999999999995],
-                    [3.0000000000000004, 46.50002701349549],
-                    [3.0000391186749895, 46.5000270134888],
-                    [3.00003911865561, 46.49999999999326],
-                    [3.0000000000000004, 46.49999999999995],
+            'id': self.pk,
+            'publication_date': str(self.sensitivearea.publication_date.strftime('%Y-%m-%d')),
+            'published': True,
+            'description': "Blabla",
+            'contact': '<a href="mailto:toto@tata.com">toto@tata.com</a>',
+            'kml_url': '/api/en/sensitiveareas/{pk}.kml'.format(pk=self.pk),
+            'geometry': {
+                'type': 'Polygon',
+                'coordinates': [[
+                    [3.0000000000000004, 46.499999999999936],
+                    [3.0000000000000004, 46.500027013495476],
+                    [3.000039118674989, 46.50002701348879],
+                    [3.0000391186556095, 46.49999999999324],
+                    [3.0000000000000004, 46.499999999999936]
                 ]],
             },
-            u'species': {
-                u"id": self.species.id,
-                u"name": self.species.name,
-                u'pictogram': os.path.join(settings.MEDIA_URL, self.species.pictogram.name),
-                u"period": [False, False, False, False, False, True, True, False, False, False, False, False],
-                u'practices': [
-                    {u'id': self.species.practices.all()[0].pk, u'name': self.species.practices.all()[0].name},
-                    {u'id': self.species.practices.all()[1].pk, u'name': self.species.practices.all()[1].name},
+            'species': {
+                "id": self.species.id,
+                "name": self.species.name,
+                'pictogram': os.path.join(settings.MEDIA_URL, self.species.pictogram.name),
+                "period": [False, False, False, False, False, True, True, False, False, False, False, False],
+                'practices': [
+                    {'id': self.species.practices.all()[0].pk, 'name': self.species.practices.all()[0].name},
+                    {'id': self.species.practices.all()[1].pk, 'name': self.species.practices.all()[1].name},
                 ],
-                u'url': self.species.url,
+                'url': self.species.url,
             },
         })
