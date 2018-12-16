@@ -417,9 +417,9 @@ class TouristicContentApidaeParser(ApidaeParser):
             capacite = u"<b>Capacité totale:</b><br>" + str(capacite) + u"<br>"
         if tarifs:
             tarifs = u"<b>Tarifs:</b><br>" + u"<br>".join(tarifs.splitlines()) + u"<br>"
-        if paiement:
+        if paiement and any('libelleFr' in values for values in paiement):
             paiement = u"<b>Modes de paiement:</b><br>" + ", ".join([i['libelleFr'] for i in paiement]) + u"<br>"
-        if services:
+        if services and any('libelleFr' in values for values in services):
             services = u"<b>Services:</b><br>" + ", ".join([i['libelleFr'] for i in services]) + u"<br>"
         if localisation:
             localisation = u"<b>Accès:</b><br>" + u"<br>".join(localisation.splitlines()) + u"<br>"
@@ -444,9 +444,9 @@ class TouristicContentApidaeParser(ApidaeParser):
             capacite = u"<b>Total Capacity:</b><br>" + str(capacite) + u"<br>"
         if tarifs:
             tarifs = u"<b>Prices:</b><br>" + u"<br>".join(tarifs.splitlines()) + u"<br>"
-        if paiement:
+        if paiement and any('libelleEn' in values for values in paiement):
             paiement = u"<b>Payment method:</b><br>" + ", ".join([i['libelleEn'] for i in paiement]) + u"<br>"
-        if services:
+        if services and any('libelleEn' in values for values in services):
             services = u"<b>Services:</b><br>" + ", ".join([i['libelleEn'] for i in services]) + u"<br>"
         if localisation:
             localisation = u"<b>Access:</b><br>" + u"<br>".join(localisation.splitlines()) + u"<br>"
@@ -463,10 +463,16 @@ class TouristicContentApidaeParser(ApidaeParser):
         ] if line]
         return '<br>'.join(lines)
 
-    def filter_description(self, src, val):
+    def filter_description_fr(self, src, val):
         return '<br>'.join(val.splitlines())
 
-    def filter_description_teaser(self, src, val):
+    def filter_description_teaser_fr(self, src, val):
+        return '<br>'.join(val.splitlines())
+
+    def filter_description_en(self, src, val):
+        return '<br>'.join(val.splitlines())
+
+    def filter_description_teaser_en(self, src, val):
         return '<br>'.join(val.splitlines())
 
 
