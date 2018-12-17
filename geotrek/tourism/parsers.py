@@ -263,7 +263,7 @@ class TouristicEventApidaeParser(ApidaeParser):
             paiement = u"<b>Modes de paiement:</b><br>" + ", ".join([i['libelleFr'] for i in paiement]) + u"<br>"
         if services and any(values.get('libelleFr') for values in services):
             services = u"<b>Services:</b><br>" + ", ".join([i['libelleFr'] for i in services]) + u"<br>"
-        if langues  and any(values.get('libelleFr') for values in langues):
+        if langues and any(values.get('libelleFr') for values in langues):
             langues = u"<b>Langues Parlés:</b><br>" + ", ".join([i['libelleFr'] for i in langues]) + u"<br>"
         if localisation:
             localisation = u"<b>Accès:</b><br>" + u"<br>".join(localisation.splitlines()) + u"<br>"
@@ -299,7 +299,8 @@ class TouristicEventApidaeParser(ApidaeParser):
             services = u""
         if langues and any(values.get('libelleEn') for values in langues):
             langues = u"<b>Langues Parlés:</b><br>" + ", ".join([i['libelleEn'] for i in langues]) + u"<br>"
-        else: langues = u""
+        else:
+            langues = u""
         if localisation:
             localisation = u"<b>Accès:</b><br>" + u"<br>".join(localisation.splitlines()) + u"<br>"
         datemodif = datetime.datetime.strptime(datemodif[:10], "%Y-%m-%d").strftime("%d/%m/%Y")
