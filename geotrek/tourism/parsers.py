@@ -118,9 +118,9 @@ class ApidaeParser(AttachmentParserMixin, Parser):
                 for lang in settings.MODELTRANSLATION_LANGUAGES:
                     new_key = key_without_tra + '_%s' % lang
                     if new_key in fields_model:
-                        new_value = [value_list if not 'libelle' in value_list
-                                 else value_list[:-2].replace('libelle', 'libelle%s' % lang.title())
-                                 for value_list in value]
+                        new_value = [value_list if 'libelle' not in value_list
+                                     else value_list[:-2].replace('libelle', 'libelle%s' % lang.title())
+                                     for value_list in value]
                         self.fields[new_key] = new_value
 
 
@@ -251,6 +251,36 @@ class TouristicEventApidaeParser(ApidaeParser):
     def filter_website(self, src, val):
         return self.filter_comm(val, 205, multiple=False)
 
+    def filter_practical_info_fr(self, src, val):
+        (ouverture, capacite, tarifs, paiement, services, langues, localisation, datemodif, proprio) = val
+        if ouverture:
+            ouverture = u"<b>Ouverture:</b><br>" + u"<br>".join(ouverture.splitlines()) + u"<br>"
+        if capacite:
+            capacite = u"<b>Capacité totale:</b><br>" + str(capacite) + u"<br>"
+        if tarifs:
+            tarifs = u"<b>Tarifs:</b><br>" + u"<br>".join(tarifs.splitlines()) + u"<br>"
+        if paiement and any(values.get('libelleFr') for values in paiement):
+            paiement = u"<b>Modes de paiement:</b><br>" + ", ".join([i['libelleFr'] for i in paiement]) + u"<br>"
+        if services and any(values.get('libelleFr') for values in services):
+            services = u"<b>Services:</b><br>" + ", ".join([i['libelleFr'] for i in services]) + u"<br>"
+        if langues  and any(values.get('libelleFr') for values in langues):
+            langues = u"<b>Langues Parlés:</b><br>" + ", ".join([i['libelleFr'] for i in langues]) + u"<br>"
+        if localisation:
+            localisation = u"<b>Accès:</b><br>" + u"<br>".join(localisation.splitlines()) + u"<br>"
+        datemodif = datetime.datetime.strptime(datemodif[:10], "%Y-%m-%d").strftime("%d/%m/%Y")
+        modif = u"<i>Fiche mise à jour par " + proprio + u" le " + datemodif + u"</i>"
+        lines = [line for line in [
+            ouverture,
+            capacite,
+            tarifs,
+            paiement,
+            services,
+            langues,
+            localisation,
+            modif,
+        ] if line]
+        return '<br>'.join(lines)
+
     def filter_practical_info_en(self, src, val):
         (ouverture, capacite, tarifs, paiement, services, langues, localisation, datemodif, proprio) = val
         if ouverture:
@@ -259,12 +289,17 @@ class TouristicEventApidaeParser(ApidaeParser):
             capacite = u"<b>Capacité totale:</b><br>" + str(capacite) + u"<br>"
         if tarifs:
             tarifs = u"<b>Tarifs:</b><br>" + u"<br>".join(tarifs.splitlines()) + u"<br>"
-        if paiement:
-            paiement = u"<b>Modes de paiement:</b><br>" + ", ".join([i['libelleFr'] for i in paiement]) + u"<br>"
-        if services:
-            services = u"<b>Services:</b><br>" + ", ".join([i['libelleFr'] for i in services]) + u"<br>"
-        if langues:
-            langues = u"<b>Langues Parlés:</b><br>" + ", ".join([i['libelleFr'] for i in langues]) + u"<br>"
+        if paiement and any(values.get('libelleEn') for values in paiement):
+            paiement = u"<b>Modes de paiement:</b><br>" + ", ".join([i['libelleEn'] for i in paiement]) + u"<br>"
+        else:
+            paiement = u""
+        if services and any(values.get('libelleEn') for values in services):
+            services = u"<b>Services:</b><br>" + ", ".join([i['libelleEn'] for i in services]) + u"<br>"
+        else:
+            services = u""
+        if langues and any(values.get('libelleEn') for values in langues):
+            langues = u"<b>Langues Parlés:</b><br>" + ", ".join([i['libelleEn'] for i in langues]) + u"<br>"
+        else: langues = u""
         if localisation:
             localisation = u"<b>Accès:</b><br>" + u"<br>".join(localisation.splitlines()) + u"<br>"
         datemodif = datetime.datetime.strptime(datemodif[:10], "%Y-%m-%d").strftime("%d/%m/%Y")
@@ -417,10 +452,14 @@ class TouristicContentApidaeParser(ApidaeParser):
             capacite = u"<b>Capacité totale:</b><br>" + str(capacite) + u"<br>"
         if tarifs:
             tarifs = u"<b>Tarifs:</b><br>" + u"<br>".join(tarifs.splitlines()) + u"<br>"
-        if paiement and any('libelleFr' in values for values in paiement):
-            paiement = u"<b>Modes de paiement:</b><br>" + ", ".join([i['libelleFr'] for i in paiement]) + u"<br>"
-        if services and any('libelleFr' in values for values in services):
-            services = u"<b>Services:</b><br>" + ", ".join([i['libelleFr'] for i in services]) + u"<br>"
+        if paiement and any(values.get('libelleFr') for values in paiement):
+            paiement = u"<b>Modes de paiement:</b><br>" + u", ".join(i.get('libelleFr') for i in paiement) + u"<br>"
+        else:
+            paiement = u""
+        if services and any(values.get('libelleFr') for values in services):
+            services = u"<b>Services:</b><br>" + u", ".join(i.get('libelleFr') for i in services) + u"<br>"
+        else:
+            services = u""
         if localisation:
             localisation = u"<b>Accès:</b><br>" + u"<br>".join(localisation.splitlines()) + u"<br>"
         datemodif = datetime.datetime.strptime(datemodif[:10], "%Y-%m-%d").strftime("%d/%m/%Y")
@@ -444,10 +483,15 @@ class TouristicContentApidaeParser(ApidaeParser):
             capacite = u"<b>Total Capacity:</b><br>" + str(capacite) + u"<br>"
         if tarifs:
             tarifs = u"<b>Prices:</b><br>" + u"<br>".join(tarifs.splitlines()) + u"<br>"
-        if paiement and any('libelleEn' in values for values in paiement):
-            paiement = u"<b>Payment method:</b><br>" + ", ".join([i['libelleEn'] for i in paiement]) + u"<br>"
-        if services and any('libelleEn' in values for values in services):
-            services = u"<b>Services:</b><br>" + ", ".join([i['libelleEn'] for i in services]) + u"<br>"
+
+        if paiement and any(values.get('libelleEn') for values in paiement):
+            paiement = u"<b>Payment method:</b><br>" + u", ".join([i.get('libelleEn') for i in paiement]) + u"<br>"
+        else:
+            paiement = u""
+        if services and any(values.get('libelleEn') for values in services):
+            services = u"<b>Services:</b><br>" + u", ".join([i.get('libelleEn') for i in services]) + u"<br>"
+        else:
+            services = u""
         if localisation:
             localisation = u"<b>Access:</b><br>" + u"<br>".join(localisation.splitlines()) + u"<br>"
         datemodif = datetime.datetime.strptime(datemodif[:10], "%Y-%m-%d").strftime("%d/%m/%Y")
