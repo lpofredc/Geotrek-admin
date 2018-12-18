@@ -190,6 +190,8 @@ class BasicJSONAPITest(TranslationResetMixin):
                               u'legend': self.video.legend,
                               u'author': self.video.author,
                               u'code': self.video_detected.code})
+
+    def test_videos_dailymotion(self):
         self.video = common_factories.AttachmentFactory(
             content_object=self.content, attachment_file='',
             attachment_video='http://www.dailymotion.com/video/x6e0q24')
