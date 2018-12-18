@@ -48,7 +48,7 @@ class ParserTests(TranslationResetMixin, TestCase):
         self.assertEqual(content.name_es, u"Test ES")
         self.assertEqual(content.name_fr, u"Quey' Raft")
         self.assertEqual(content.description_fr[:27], u"Au pied du château médiéval")
-        self.assertEqual(content.description_es, u"Descriptif Détaillé")
+        self.assertEqual(content.description_en, u"Descriptif Détaillé")
         self.assertEqual(content.description_teaser_fr[:24], u"Des descentes familiales")
         self.assertEqual(content.description_teaser_es, u"Descriptif Court ES")
         self.assertEqual(content.description_teaser_en, u"Descriptif Court EN")
