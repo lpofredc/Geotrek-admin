@@ -109,6 +109,13 @@ class ParserTests(TranslationResetMixin, TestCase):
                       event.practical_info_fr)
         self.assertIn(u"><br><b>Services:</b><br>English Service, Other Service<br>",
                       event.practical_info_en)
+        self.assertIn(u"><br><b>Services:</b><br>English Service, Other Service<br>",
+                      event.practical_info)
+        self.assertIn(u"<b>Openning:</b><br>Tuesday, August 6, 2019 from 9am to noon.<br>", event.practical_info_en)
+        self.assertIn(u"<b>Ouverture:</b><br>Mardi 6 août 2019 de 9h à midi.<br>", event.practical_info_fr)
+        self.assertIn(u"<b>Spoken languages:</b><br>French<br><br>", event.practical_info_en)
+        self.assertIn(u"<b>Spoken languages:</b><br>French<br><br>", event.practical_info)
+        self.assertIn(u"<b>Langues Parlées:</b><br>Français<br>", event.practical_info_fr)
         self.assertTrue(event.published)
         self.assertEqual(event.organizer, u'Toto')
         self.assertEqual(str(event.meeting_time), '09:00:00')
