@@ -6,6 +6,7 @@ import datetime
 import requests
 from django.conf import settings
 from django.contrib.gis.geos import Point
+from django.db import models
 from django.utils.translation import ugettext as _
 
 from geotrek.common.parsers import (AttachmentParserMixin, Parser,
@@ -341,6 +342,34 @@ class TouristicContentApidaeParser(ApidaeParser):
             self.m2m_constant_fields['source'] = self.source
         if self.portal is not None:
             self.m2m_constant_fields['portal'] = self.portal
+
+    def get_to_delete_kwargs(self):
+        # FIXME: use mapping if it exists
+        kwargs = {}
+        for dst, val in self.constant_fields.iteritems():
+            field = self.model._meta.get_field(dst)
+            if isinstance(field, models.ForeignKey):
+                natural_key = self.natural_keys[dst]
+                try:
+                    kwargs[dst] = field.rel.to.objects.get(**{natural_key: val})
+                except field.rel.to.DoesNotExist:
+                    return None
+            else:
+                kwargs[dst] = val
+        for dst, val in self.m2m_constant_fields.iteritems():
+            assert not self.separator or self.separator not in val
+            field = self.model._meta.get_field(dst)
+            natural_key = self.natural_keys[dst]
+            filters = {natural_key: subval for subval in val}
+            if not filters:
+                continue
+            if dst in ('type1', 'type2'):
+                filters['category'] = kwargs['category'].pk
+            try:
+                kwargs[dst] = field.rel.to.objects.get(**filters)
+            except field.rel.to.DoesNotExist:
+                return None
+        return kwargs
 
     def filter_attachments(self, src, val):
         result = []
