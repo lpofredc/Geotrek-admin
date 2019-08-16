@@ -10,6 +10,7 @@ from geotrek.authent.tests.base import AuthentFixturesTest
 from geotrek.trekking.tests import TrekkingManagerTest
 from geotrek.common.tests import TranslationResetMixin
 from geotrek.sensitivity.factories import SensitiveAreaFactory
+from geotrek.sensitivity.models import SportPractice
 
 
 class SensitiveAreaViewsSameStructureTests(AuthentFixturesTest):
@@ -183,12 +184,12 @@ class APIv2Test(TranslationResetMixin, TrekkingManagerTest):
         }
         self.expected_geo_result[u'properties'][u'url'] = u'http://testserver/api/v2/sensitivearea/{}/?format=geojson'.format(self.pk)
 
-    def test_object(self):
+    def test_detail_sensitivearea(self):
         url = '/api/v2/sensitivearea/{pk}/?format=json&period=ignore&language=en'.format(pk=self.pk)
         response = self.client.get(url)
         self.assertJSONEqual(response.content, self.expected_result)
 
-    def test_list(self):
+    def test_list_sensitivearea(self):
         url = '/api/v2/sensitivearea/?format=json&period=ignore&language=en'
         response = self.client.get(url)
         self.assertJSONEqual(response.content, {
@@ -198,12 +199,12 @@ class APIv2Test(TranslationResetMixin, TrekkingManagerTest):
             u'results': [self.expected_result],
         })
 
-    def test_geo_object(self):
+    def test_geo_detail_sensitivearea(self):
         url = '/api/v2/sensitivearea/{pk}/?format=geojson&period=ignore&language=en'.format(pk=self.pk)
         response = self.client.get(url)
         self.assertJSONEqual(response.content, self.expected_geo_result)
 
-    def test_geo_list(self):
+    def test_geo_list_sensitivearea(self):
         url = '/api/v2/sensitivearea/?format=geojson&period=ignore&language=en'
         response = self.client.get(url)
         self.assertJSONEqual(response.content, {
@@ -214,9 +215,32 @@ class APIv2Test(TranslationResetMixin, TrekkingManagerTest):
             u'features': [self.expected_geo_result]
         })
 
-    def test_no_duplicates(self):
+    def test_no_duplicates_sensitivearea(self):
         url = '/api/v2/sensitivearea/?format=geojson&period=ignore&language=en&practices={}'.format(
             ','.join([str(p.pk) for p in self.species.practices.all()])
         )
         response = self.client.get(url)
         self.assertEqual(response.json()['count'], 1)
+
+    def test_list_bubble_sensitivearea(self):
+        url = '/api/v2/sensitivearea/?format=json&period=ignore&language=en&bubble=True'
+        response = self.client.get(url)
+        self.expected_result[u'radius'] = None
+        self.assertJSONEqual(response.content, {
+            u'count': 1,
+            u'previous': None,
+            u'next': None,
+            u'results': [self.expected_result],
+        })
+
+    def test_list_sportpractice(self):
+        url = '/api/v2/sportpractice/?format=json&language=en'
+        response = self.client.get(url)
+        sports_practice = SportPractice.objects.all()
+        result_sportpractice = [{'id': sp.id, 'name': sp.name} for sp in sports_practice]
+        self.assertJSONEqual(response.content, {
+            u'count': 2,
+            u'previous': None,
+            u'next': None,
+            u'results': result_sportpractice
+        })
