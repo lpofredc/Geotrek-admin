@@ -11,7 +11,7 @@ from geotrek.authent.factories import StructureFactory, UserProfileFactory
 from geotrek.authent.tests.base import AuthentFixturesTest
 from geotrek.trekking.tests import TrekkingManagerTest
 from geotrek.common.tests import TranslationResetMixin
-from geotrek.sensitivity.factories import SensitiveAreaFactory
+from geotrek.sensitivity.factories import RegulatorySensitiveAreaFactory, SensitiveAreaFactory
 from geotrek.sensitivity.models import SportPractice
 
 
@@ -190,6 +190,12 @@ class APIv2Test(TranslationResetMixin, TrekkingManagerTest):
         url = '/api/v2/sensitivearea/{pk}/?format=json&period=ignore&language=en'.format(pk=self.pk)
         response = self.client.get(url)
         self.assertJSONEqual(response.content, self.expected_result)
+
+    def test_detail_sensitivearea_regulatory(self):
+        self.sensitivearea = RegulatorySensitiveAreaFactory.create(species__period01=True)
+        url = '/api/v2/sensitivearea/{pk}/?format=json&period=ignore&language=en'.format(pk=self.sensitivearea.pk)
+        response = self.client.get(url)
+        self.assertIsNone(response.json()['species_id'])
 
     def test_list_sensitivearea(self):
         url = '/api/v2/sensitivearea/?format=json&period=ignore&language=en'
