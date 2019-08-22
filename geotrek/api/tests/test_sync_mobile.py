@@ -1,4 +1,5 @@
 # -*- encoding: UTF-8 -*-
+import errno
 from io import BytesIO
 import json
 from landez.sources import DownloadError
@@ -120,8 +121,26 @@ class SyncMobileFailTest(TestCase):
         with self.assertRaises(CommandError) as e:
             management.call_command('sync_mobile', 'tmp', url='http://localhost:8000',
                                     skip_tiles=True, verbosity=2)
-        self.assertEqual(e.exception.message, "Destination directory contains extra data")
         shutil.rmtree(os.path.join('tmp', 'other'))
+        self.assertEqual(e.exception.message, "Destination directory contains extra data")
+
+    def test_fail_sync_already_running(self):
+        os.makedirs(os.path.join('tmp_sync_mobile'))
+        with self.assertRaises(CommandError) as e:
+            management.call_command('sync_mobile', 'tmp', url='http://localhost:8000',
+                                    skip_tiles=True, verbosity=2)
+        shutil.rmtree(os.path.join('tmp_sync_mobile'))
+        self.assertEqual(e.exception.message, "The tmp_sync_mobile/ directory already exists. "
+                                              "Please check no other sync_mobile command is already running. "
+                                              "If not, please delete this directory.")
+
+    @mock.patch('os.mkdir')
+    def test_fail_sync_tmp_sync_rando_permission_denied(self, mkdir):
+        mkdir.side_effect = OSError(errno.EACCES, 'Permission Denied')
+        with self.assertRaises(OSError) as e:
+            management.call_command('sync_mobile', 'tmp', url='http://localhost:8000',
+                                    skip_tiles=True, verbosity=2)
+        self.assertEqual(str(e.exception), "[Errno 13] Permission Denied")
 
     def test_fail_url_ftp(self):
         with self.assertRaises(CommandError) as e:
