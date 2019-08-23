@@ -116,3 +116,12 @@ msgstr ""
 
 msgid "Information Desks Types"
 msgstr ""
+
+msgid "Mobile sync"
+msgstr ""
+
+msgid "Sync mobile ended"
+msgstr ""
+
+msgid "Launch Sync Mobile"
+msgstr ""

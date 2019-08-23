@@ -116,3 +116,12 @@ msgstr "Ne plus afficher toutes les durées"
 
 msgid "Information Desks Types"
 msgstr "Types de lieux de renseignement"
+
+msgid "Mobile sync"
+msgstr "Synchro mobile"
+
+msgid "Sync mobile ended"
+msgstr "Synchro mobile terminé"
+
+msgid "Launch Sync Mobile"
+msgstr "Lancer la synchro mobile"
