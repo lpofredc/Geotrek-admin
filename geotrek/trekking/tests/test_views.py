@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
+from io import BytesIO
 import json
 import datetime
 from collections import OrderedDict
 import hashlib
+import shutil
 
 from unittest import skipIf
 
@@ -1332,3 +1334,9 @@ class SyncRandoViewTest(TestCase):
         self.client.login(username='homer', password='doooh')
         response = self.client.post(reverse('trekking:sync_randos'), data={})
         self.assertRedirects(response, '/login/?next=/commands/sync')
+
+    def test_get_sync_states(self):
+        self.client.login(username='admin', password='super')
+        response = self.client.post(reverse('trekking:sync_randos_state'), data={})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, '[]')
