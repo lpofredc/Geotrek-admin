@@ -217,7 +217,8 @@ class APIAccessTestCase(BaseApiTest):
         self.assertEqual('Child_published_2', json_response_2.get('properties').get('name'))
 
     def test_trek_list(self):
-        response = self.get_treks_list('fr')
+        with self.assertNumQueries(1):
+            response = self.get_treks_list('fr')
         #  test response code
         self.assertEqual(response.status_code, 200)
 

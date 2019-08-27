@@ -88,7 +88,7 @@ if 'geotrek.trekking' in settings.INSTALLED_APPS:
             return obj.resized_picture_mobile(root_pk)
 
         def get_children_number(self, obj):
-            return obj.children.count()
+            return obj.count_children
 
         class Meta(TrekBaseSerializer.Meta):
             fields = (
