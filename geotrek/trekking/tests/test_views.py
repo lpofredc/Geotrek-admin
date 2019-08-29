@@ -1,12 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
-from io import BytesIO
 import json
 import datetime
 from collections import OrderedDict
 import hashlib
-import shutil
 
 from unittest import skipIf
 
