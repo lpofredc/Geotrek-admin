@@ -1,0 +1,510 @@
+{% extends "mapentity/base.html" %}
+{% load i18n mapentity_tags static %}
+
+
+<style>
+    #formmap {
+        height: 500px;
+    }
+
+    .has-display-none {
+        display: none;
+        visibility: hidden;
+    }
+
+    .message {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 100;
+    }
+     
+    .logo {
+        height: 50px;
+    }
+</style>
+
+
+
+
+<body>
+<nav class="navbar" role="navigation" aria-label="main navigation">
+    <div class="navbar-brand">
+        <a class="navbar-item" href="https://biodiv-sports.fr">
+            <img src="images/logo.png">
+        </a>
+    </div>
+</nav>
+
+<div class="container" id="app">
+    <h1 class="title">
+        Widget Biodiv-sports
+    </h1>
+    <p class="subtitle">
+        Page de génération des liens pour l'intégration des cartes d'enjeux Biodiv-Sport en <code>iframe</code>
+    </p>
+    <div class="card">
+        <div class="card-header">
+            <i class="fa fa-cog" aria-hidden="true"></i> Configurateur
+        </div>
+        <div class="card-body">
+            <div class="container">
+                <form id="forms">
+                    <div class="row">
+                        <div class="col">
+                            <div class="form-group">
+                                <label class="label">Langue</label>
+                                <div class="form-control">
+                                    <div class="select is-fullwidth">
+                                        <select class="form-control" v-model="form.language">
+                                            <option value="fr" selected>Français</option>
+                                            <option value="en">English</option>
+                                            <option value="it">Italiano</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="form-group">
+                                <label class="label">Période</label>
+                                <input class="form-control" type="checkbox" v-model="form.defaultPeriod" checked> Période courante
+                                (option
+                                par défaut)
+                                <div v-if="!form.defaultPeriod" class="control">
+                                    <div class="select is-multiple is-fullwidth">
+                                        <select multiple v-model="form.period">
+                                            <option value="1">Janvier</option>
+                                            <option value="2">Février</option>
+                                            <option value="3">Mars</option>
+                                            <option value="4">Avril</option>
+                                            <option value="5">Mai</option>
+                                            <option value="6">Juin</option>
+                                            <option value="7">Juillet</option>
+                                            <option value="8">Août</option>
+                                            <option value="9">Septembre</option>
+                                            <option value="10">Octobre</option>
+                                            <option value="11">Novembre</option>
+                                            <option value="12">Décembre</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="column">
+                            <div class="field">
+                                <label class="label">Pratiques sportives</label>
+                                <div class="control">
+                                    <div class="select is-multiple is-fullwidth">
+                                        <select multiple v-model="form.practice">
+                                            <option v-for="p in practicesList" :value="p.id">
+                                                [[ p.name.fr ]]
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="columns">
+                        <div class="column">
+                            <div class="field">
+                                <label class="label">Hauteur (pixels) :
+                                    <code>[[ iframeHeight ? iframeHeight : 'Non défini' ]]px</code></label>
+                                <div class="control">
+                                    <input class="input" v-model="iframeHeight" placeholder="Largeur" type="number"
+                                        step="10">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="column">
+                            <div class="field">
+                                <label class="label">largeur (%):
+                                    <code>[[ iframeWidth ? iframeWidth : 'Non défini' ]]%</code></label>
+                                <div class="control">
+                                    <input v-model="iframeWidth" class="input" placeholder="Hauteur" type="range">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="columns">
+                        <div class="column">
+                            <div class="field">
+                                <label class="label">Zone couverte par la carte à intégrer (bounding box):
+                                    <code>[[ form.bbox ? form.bbox  : 'Non défini' ]]</code></label>
+                                <div id="formmap"></div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="panel js-tabs-container">
+        <p class="panel-heading">
+            <i class="fa fa-code" aria-hidden="true"></i> Code à copier
+        </p>
+        <p class="panel-tabs is-boxed is-fullwidth">
+            <a class="is-active" data-tab="tab-iframe"><i class="fa fa-html5" aria-hidden="true"></i> iframe</a>
+            <a data-tab="tab-iframe-wp"><i class="fa fa-wordpress" aria-hidden="true"></i> iframe (WordPress)</a>
+            <a data-tab="tab-url"><i class="fa fa-link" aria-hidden="true"></i> Adresse directe</a>
+            <a data-tab="tab-geojson"><i class="fa fa-map-o" aria-hidden="true"></i> geojson</a>
+        </p>
+
+
+
+        <div class="js-tab-content" id="tab-iframe">
+            <div class="panel-block">
+                <div class="control has-icons-left">
+                    <input class="input" type="text" :value="htmlIframeUrl" readonly>
+                    <span class="icon is-small is-left">
+                        <i class="fa fa-code" aria-hidden="true"></i>
+                    </span>
+                </div>
+            </div>
+            <div class="panel-block">
+                <button class="button is-info is-fullwidth"
+                    v-on:click="copyStringToClipboard(htmlIframeUrl)">Copier</button>
+            </div>
+        </div>
+        <div class="has-display-none js-tab-content" id="tab-iframe-wp">
+            <div class="panel-block">
+                <div class="control has-icons-left">
+                    <input class="input" type="text" :value="wpIframeUrl" readonly>
+                    <span class="icon is-small is-left">
+                        <i class="fa fa-code" aria-hidden="true"></i>
+                    </span>
+                </div>
+            </div>
+            <div class="panel-block">
+                <div class="control">
+                    Nécessite l'installation préalable du plugin <strong><a
+                            href="https://wordpress.org/plugins/iframe/" target="blank">IFRAME</a></strong>
+                </div>
+
+            </div>
+            <div class="panel-block">
+                <button class="button is-info is-fullwidth"
+                    v-on:click="copyStringToClipboard(wpIframeUrl)">Copier</button>
+            </div>
+        </div>
+        <div class="has-display-none js-tab-content" id="tab-url">
+            <div class="panel-block">
+                <div class="control has-icons-left">
+                    <input class="input" type="text" :value="htmlUrl" readonly>
+                    <span class="icon is-small is-left">
+                        <i class="fa fa-code" aria-hidden="true"></i>
+                    </span>
+                </div>
+            </div>
+            <div class="panel-block">
+                <button class="button is-info is-fullwidth"
+                    v-on:click="copyStringToClipboard(htmlUrl)">Copier</button>
+            </div>
+        </div>
+        <div class="has-display-none js-tab-content" id="tab-geojson">
+            <div class="panel-block">
+                <div class="control has-icons-left">
+                    <input class="input" type="text" :value="apiUrl" readonly>
+                    <span class="icon is-small is-left">
+                        <i class="fa fa-code" aria-hidden="true"></i>
+                    </span>
+                </div>
+            </div>
+            <div class="panel-block">
+                <button class="button is-info is-fullwidth"
+                    v-on:click="copyStringToClipboard(apiUrl)">Copier</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <p class="panel-heading">
+            <i class="fa fa-map" aria-hidden="true"></i> Prévisualisation
+        </p>
+        <div class="panel-block" v-html="htmlIframeUrl">
+        </div>
+    </div>
+    <article v-if="displayCopyMessage" class="message is-success">
+        <div class="message-body">
+            Code copié!
+        </div>
+    </article>
+</div>
+</div>
+</div>
+
+<!-- <div id="mapid"></div> -->
+</div>
+
+<footer class="footer">
+    <div class="content has-text-centered">
+        <p>
+            <strong>Widget Biodiv-Sports</strong> par la <a href="https://auvergne-rhone-alpes.lpo.fr/">LPO Auvergne-Rhône-Alpes</a>.
+            Le code source <a href="https://github.com/lpofredc/biodivsport-widget/" target="_blank"><i
+                    class="fa fa-github" aria-hidden="true"></i></a>, est sous licence <a
+                href="http://opensource.org/licenses/mit-license.php">GPL3</a>
+        </p>
+    </div>
+    <div class="content has-text-centered">
+        <p>
+            Un <strong>projet financé</strong> par&nbsp;: <br>
+            <a href="https://www.petzl.com/fondation/fondation-petzl" target="_blank" title="Fondation Petzl"><img class="logo" src="images/Petzl.jpg" alt="Fondation Petzl"></a>
+            <a href="https://www.auvergnerhonealpes.fr/" target="_blank" title="Région Auvergne-Rhône-Alpes">&nbsp;<img class="logo" src="images/Logo_RegionARA_Partenaire_typo-gris-pastille-bleu.png" alt="Région Auvergne-Rhône-Alpes"></a>
+        </p>
+    </div>
+    <div class="content has-text-centered">
+        <p>
+            Les <strong>partenaires du projet</strong>&nbsp;:<br>
+            <a href="https://www.petzl.com/fondation/fondation-petzl" target="_blank" title="Fondation Petzl"><img src="images/bandeau_partenaires.png" alt="Fondation Petzl"></a>
+        </p>
+    </div>
+</footer>
+{% comment %} <script src="assets/node_modules/leaflet/dist/leaflet.js"></script> {% endcomment %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.7.4/vue.min.js" integrity="sha512-ReiTH8bLMRWfRdFMuHPWq8Wk+7a2JQhfLWx2YgnjJ35TVU9MkQKioiHt5TfHzbHXIXM58TkFwukQ5+DlyJkg3A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.4/css/bulma.min.css" integrity="sha512-HqxHUkJM0SYcbvxUw5P60SzdOTy/QVwA1JJrvaXJv4q7lmbDZCmZaqz01UPOaQveoxfYRv1tHozWGPMcuTBuvQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma-tooltip/1.2.0/bulma-tooltip.min.css" integrity="sha512-eQONsEIU2JzPniggWsgCyYoASC8x8nS0w6+e5LQZbdvWzDUVfUh+vQZFmB2Ykj5uqGDIsY7tSUCdTxImWBShYg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<!-- <script src="assets/node_modules/vue/dist/vue.min.js"></script>
+
+<script src="assets/node_modules/axios/dist/axios.min.js"></script>
+<script src="assets/node_modules/buefy/dist/buefy.js"></script>
+<script src="assets/node_modules/bulma-extensions/dist/js/bulma-extensions.js"></script>
+<script src="assets/node_modules/leaflet-draw/dist/leaflet.draw.js"></script> -->
+
+
+<script>
+    var app = new Vue({
+        el: '#app',
+        delimiters: ['[[', ']]'],
+        data: {
+            map: null,
+            tileLayers: null,
+            drawItems: null,
+            drawControlDeleteOnly: null,
+            drawControlFull: null,
+            practices: null,
+            structure: null,
+            fields: null,
+            omit: null,
+            geoDatas: null,
+            layerbounds: null,
+            iframeWidth: 100,
+            iframeHeight: 500,
+            displayCopyMessage: false,
+            form: {
+                language: 'fr',
+                period: [],
+                practice: [],
+                defaultPeriod: true,
+                bbox: null,
+            },
+            practicesList: [],
+            qs: [],
+            url: { type: Object },
+        },
+        methods: {
+            displayMessage: function (ms) {
+                this.displayCopyMessage = true;
+                setTimeout(() => {
+                    this.displayCopyMessage = false;
+                }, ms);
+            },
+            copyStringToClipboard: function (str) {
+                // Create new element
+                var el = document.createElement('textarea');
+                // Set value (string to be copied)
+                el.value = str;
+                // Set non-editable to avoid focus and move outside of view
+                el.setAttribute('readonly', '');
+                el.style = { position: 'absolute', left: '-9999px' };
+                document.body.appendChild(el);
+                // Select text inside element
+                el.select();
+                // Copy text to clipboard
+                document.execCommand('copy');
+                // Remove temporary element
+                document.body.removeChild(el);
+                this.displayMessage(2000);
+            },
+            copyIframeCode: function () {
+                var copyText = document.getElementById("myIframeCode");
+                copyText.select();
+                copyText.setSelectionRange(0, 99999)
+                document.execCommand("copy");
+                alert("Copied the text: " + copyText.value);
+            },
+            getBbox(layer) {
+                this.form.bbox = layer.getBounds().toBBoxString();
+                return this.form.bbox;
+
+            },
+            initMap: function () {
+                this.map = L.map('formmap').setView([46, 6], 8);
+            },
+            initLayers: function () {
+
+                var OpenStreetMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                    maxZoom: 19
+                }).addTo(this.map), OpenTopoMap = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                    maxZoom: 18
+                });
+
+                var baseMaps = {
+                    'OpenStreetMap': OpenStreetMap,
+                    'OpenTopoMap': OpenTopoMap,
+                }
+
+                this.tileLayers = L.control.layers(baseMaps).addTo(this.map);
+
+            },
+            drawItem: function () {
+                this.drawItems = L.featureGroup().addTo(this.map);
+                this.drawControlFull = new L.Control.Draw({
+                    // edit: {
+                    //     featureGroup: this.drawItems,
+                    //     edit: false,
+                    //     poly: {
+                    //         allowIntersection: false
+                    //     }
+                    // },
+                    draw: {
+                        rectangle: {
+                            allowIntersection: false,
+                            showBounds: true
+                        },
+                        polygon: false,
+                        marker: false,
+                        polyline: false,
+                        circlemarker: false,
+                        circle: false,
+                        point: false
+                    },
+                    edit: false,
+                });
+
+                this.drawControlDeleteOnly = new L.Control.Draw({
+                    edit: {
+                        featureGroup: this.drawItems,
+                        edit: false,
+                    },
+                    draw: false,
+                });
+                this.map.addControl(this.drawControlFull);
+
+            },
+            drawItemsInteract: function () {
+                var self = this;
+                self.map.on(L.Draw.Event.CREATED, function (e) {
+                    self.drawItems.addLayer(e.layer);
+                    self.drawControlFull.remove(self.map);
+                    self.drawControlDeleteOnly.addTo(self.map);
+                    var layer = e.layer;
+                    self.getBbox(layer);
+                });
+                self.map.on(L.Draw.Event.DELETED, function (e) {
+                    if (self.drawItems.getLayers().length === 0) {
+                        self.drawControlDeleteOnly.remove(self.map);
+                        self.drawControlFull.addTo(self.map);
+                        self.form.bbox = null;
+                    };
+                });
+            }
+
+        },
+        mounted() {
+            axios.get(
+                "https://biodiv-sports.fr/api/v2/sportpractice/?format=json"
+            )
+                .then(response => {
+                    this.practicesList = response.data.results
+                })
+                .catch(function (error) {
+                    console.log(error);
+                });
+            this.initMap();
+            this.initLayers();
+            this.drawItem();
+            this.drawItemsInteract();
+        },
+        computed: {
+            apiUrl: function () {
+                this.baseApiUrl = "https://biodiv-sports.fr/api/v2/sensitivearea/?format=geojson&page_size=10000"
+                this.qs = [];
+                if (!!this.form.language) { this.qs.push("language=" + this.form.language) };
+                if (!this.form.defaultPeriod) {
+                    if (this.form.period.length > 0) { this.qs.push("period=" + this.form.period) };
+                }
+                if (this.form.practice.length > 0) { this.qs.push("practices=" + this.form.practice) };
+                if (this.form.bbox) { this.qs.push("in_bbox=" + this.form.bbox) };
+                if (this.qs.length > 0) { this.baseApiUrl = this.baseApiUrl + "&" };
+
+                this.finalUrl = this.baseApiUrl + this.qs.join("&");
+                return this.finalUrl;
+            },
+            htmlUrl: function () {
+                this.originUrl = window.location.origin;
+                return this.originUrl + '/map.html?apiUrl=' + this.apiUrl
+            },
+            htmlIframeUrl: function () {
+                this.originUrl = window.location.origin;
+                return '<iframe src="' + this.htmlUrl + '" width="' + this.iframeWidth + '%" height="' + this.iframeHeight + '" frameBorder="0"></iframe>'
+            },
+            wpIframeUrl: function () {
+                this.originUrl = window.location.origin;
+                return '[iframe src="' + this.htmlUrl + '" width="' + this.iframeWidth + '%" height="' + this.iframeHeight + '" frameBorder="0"]'
+            },
+        },
+        created() {
+
+        }
+    });
+
+
+</script>
+<script>
+    // app.js
+
+    'use strict';
+
+    document.addEventListener('DOMContentLoaded', function () {
+
+        var tabs = document.getElementsByClassName('panel-tabs');
+        if (tabs) {
+            var _loop = function _loop() {
+                var tabListItems = tabs[i].querySelectorAll('a');
+                tabListItems.forEach(function (tabListItem) {
+
+                    // création d'un écouteur d'évènements sur le clic d'une tab
+                    tabListItem.addEventListener('click', function () {
+
+                        // suppression de la classe is-active sur chacune des tabs avant de la rajouter sur la tab qui a été cliquée
+                        tabListItems.forEach(function (tabListItem) {
+                            tabListItem.classList.remove('is-active');
+                        });
+                        tabListItem.classList.add('is-active');
+
+                        // tabName correspond à la valeur de l'attribut data-tab
+                        var tabName = tabListItem.dataset.tab;
+
+                        // on identifie tous les contenus possibles puis on applique la classe has-display-none si l'ID du contenu ne correspond pas à la valeur de l'attribut data-tab
+                        tabListItem.closest('.js-tabs-container').querySelectorAll('.js-tab-content').forEach(function (tabContent) {
+
+                            if (tabContent.id !== tabName) {
+                                tabContent.classList.add('has-display-none');
+                            } else {
+                                tabContent.classList.remove('has-display-none');
+                            }
+                        });
+                    }, false);
+                });
+            };
+
+            for (var i = 0; i < tabs.length; i++) {
+                _loop();
+            }
+        }
+    });
+</script>

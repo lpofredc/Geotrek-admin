@@ -28,6 +28,7 @@ urlpatterns = [
          views.SensitiveAreaOpenAirDetail.as_view(), name="sensitivearea_openair_detail"),
     path('api/<lang:lang>/sensitiveareas/openair',
          views.SensitiveAreaOpenAirList.as_view(), name="sensitivearea_openair_list"),
+    path('sensitivearea/widget', views.SensitiveAreaWidget.as_view(), name="sensitivearea_widget_generator")
 ]
 
 router = DefaultRouter(trailing_slash=False)

@@ -2,13 +2,14 @@ import json
 import logging
 from datetime import datetime
 
+
 from django.conf import settings
 from django.contrib.gis.db.models.functions import Transform
 from django.db.models import F, Case, When
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext_lazy as _
-from django.views.generic import ListView
+from django.views.generic import ListView, TemplateView
 from django.views.generic.detail import BaseDetailView
 from mapentity.views import (MapEntityCreate, MapEntityUpdate, MapEntityList, MapEntityDetail,
                              MapEntityDelete, MapEntityFormat, LastModifiedMixin)
@@ -205,7 +206,10 @@ class SensitiveAreaKMLDetail(LastModifiedMixin, PublicOrReadPermMixin, BaseDetai
                                 content_type='application/vnd.google-earth.kml+xml')
         return response
 
+class SensitiveAreaWidget(TemplateView):
+    template_name:str= 'sensitivity/sensitivearea_widget_generator.html'
 
+    
 class SensitiveAreaOpenAirDetail(LastModifiedMixin, PublicOrReadPermMixin, BaseDetailView):
     queryset = SensitiveArea.objects.existing()
 
@@ -245,3 +249,4 @@ class SensitiveAreaOpenAirList(PublicOrReadPermMixin, ListView):
         response = HttpResponse(airspace_file, content_type='application/octet-stream; charset=UTF-8')
         response['Content-Disposition'] = 'inline; filename=sensitivearea_openair.txt'
         return response
+
