@@ -18,6 +18,10 @@ CHANGELOG
 - New ``POIParser`` to import POIs from files (with and without dynamic segmentation)
 - New sensitivity area detail public view : New sensitivity public view for sensitive areas (``/public/sensitiveareas/{pk}``).
 
+**Improvements**
+
+- Sensitivity: Add missing attachments list to sensitive areas API
+
 **Bug fixes**
 
 - Fix shp zipfile import
