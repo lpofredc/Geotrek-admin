@@ -57,12 +57,16 @@
             <th>{{ sensitivearea|verbose:"rules" }}</th>
             <td>
                 {% for rule in  sensitivearea.rules.all %}
-                <img
-                    class="pictogram"
-                    src="{{rule.pictogram.url}}"
-                    title="{{rule.name}}"
-                    alt="{{rule.name}}"
-                />
+                    {% if rule.pictogram %}
+                        <img
+                            class="pictogram"
+                            src="{{rule.pictogram.url}}"
+                            title="{{rule.name}}"
+                            alt="{{rule.name}}"
+                        />
+                    {% else %}
+                        <span class="badge badge-secondary">{{rule.name}}</span>
+                    {% endif %}
                 {%endfor%}
             </td>
         </tr>
