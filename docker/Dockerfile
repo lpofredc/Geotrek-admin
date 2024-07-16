@@ -14,7 +14,7 @@ ENV REDIS_HOST="redis"
 ENV CONVERSION_HOST="convertit"
 ENV CAPTURE_HOST="screamshotter"
 ENV CUSTOM_SETTINGS_FILE="/opt/geotrek-admin/var/conf/custom.py"
-ENV GUNICORN_WORKERS=1
+ENV WORKERS=1
 ENV TZ=UTC
 
 WORKDIR /opt/geotrek-admin
@@ -106,4 +106,4 @@ RUN apt-get update -qq && apt-get -yqq full-upgrade && \
 
 USER geotrek
 
-CMD ["gunicorn", "geotrek.asgi:application", "--bind=0.0.0.0:8000", "-k", "uvicorn.workers.UvicornWorker","--workers", "${GUNICORN_WORKERS}"]
+CMD gunicorn geotrek.asgi:application --bind=0.0.0.0:8000 -k uvicorn.workers.UvicornWorker --workers ${WORKERS}
