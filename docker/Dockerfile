@@ -1,20 +1,21 @@
-FROM ubuntu:focal as base
+FROM ubuntu:focal AS base
 
-ENV PYTHONBUFFERED 1
-ENV DEBIAN_FRONTEND noninteractive
-ENV ENV prod
-ENV SERVER_NAME "localhost"
+ENV PYTHONBUFFERED=1
+ENV DEBIAN_FRONTEND=noninteractive
+ENV ENV=prod
+ENV SERVER_NAME="localhost"
 # If POSTGRES_HOST is empty, entrypoint will set it to the IP of the docker host in the container
-ENV POSTGRES_HOST ""
-ENV POSTGRES_PORT "5432"
-ENV POSTGRES_USER "geotrek"
-ENV POSTGRES_PASSWORD "geotrek"
-ENV POSTGRES_DB "geotrekdb"
-ENV REDIS_HOST "redis"
-ENV CONVERSION_HOST "convertit"
-ENV CAPTURE_HOST "screamshotter"
-ENV CUSTOM_SETTINGS_FILE "/opt/geotrek-admin/var/conf/custom.py"
-ENV TZ UTC
+ENV POSTGRES_HOST=""
+ENV POSTGRES_PORT="5432"
+ENV POSTGRES_USER="geotrek"
+ENV POSTGRES_PASSWORD="geotrek"
+ENV POSTGRES_DB="geotrekdb"
+ENV REDIS_HOST="redis"
+ENV CONVERSION_HOST="convertit"
+ENV CAPTURE_HOST="screamshotter"
+ENV CUSTOM_SETTINGS_FILE="/opt/geotrek-admin/var/conf/custom.py"
+ENV GUNICORN_WORKERS=1
+ENV TZ=UTC
 
 WORKDIR /opt/geotrek-admin
 RUN mkdir -p /opt/geotrek-admin/var/log /opt/geotrek-admin/var/cache
@@ -58,7 +59,7 @@ COPY --chown=geotrek:geotrek docker/scripts/* /usr/local/bin/
 ENTRYPOINT ["/bin/sh", "-e", "/usr/local/bin/entrypoint.sh"]
 EXPOSE 8000
 
-FROM base as build
+FROM base AS build
 
 USER root
 
@@ -75,8 +76,9 @@ RUN python3.8 -m venv /opt/venv
 RUN /opt/venv/bin/pip install --no-cache-dir -U pip setuptools wheel
 COPY requirements.txt requirements.txt
 RUN /opt/venv/bin/pip install --no-cache-dir -r requirements.txt -U
+RUN /opt/venv/bin/pip install --no-cache-dir uvicorn
 
-FROM build as dev
+FROM build AS dev
 
 COPY dev-requirements.txt dev-requirements.txt
 RUN /opt/venv/bin/pip install --no-cache-dir -r dev-requirements.txt
@@ -85,9 +87,9 @@ RUN /opt/venv/bin/pip install --no-cache-dir -r doc-requirements.txt
 
 CMD ["./manage.py", "runserver", "0.0.0.0:8000"]
 
-FROM base as prod
+FROM base AS prod
 
-ENV ENV prod
+ENV ENV=prod
 
 COPY --chown=geotrek:geotrek --from=build /opt/venv /opt/venv
 COPY --chown=geotrek:geotrek geotrek/ geotrek/
@@ -104,4 +106,4 @@ RUN apt-get update -qq && apt-get -yqq full-upgrade && \
 
 USER geotrek
 
-CMD ["gunicorn", "geotrek.wsgi:application", "--bind=0.0.0.0:8000"]
+CMD ["gunicorn", "geotrek.asgi:application", "--bind=0.0.0.0:8000", "-k", "uvicorn.workers.UvicornWorker","--workers", "${GUNICORN_WORKERS}"]
