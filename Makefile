@@ -28,6 +28,13 @@ build_deb:
 	docker stop geotrek_deb_run
 	docker rm geotrek_deb_run
 
+release:
+	docker build -t geotrek_release -f ./docker/Dockerfile.debian.builder --target base .
+	docker run --name geotrek_release -v ./debian:/dpkg-build/debian -it geotrek_release  bash -c "dch -r -D RELEASED"
+	docker stop geotrek_release
+	docker rm geotrek_release
+
+
 serve:
 	$(docker_compose) up
 
@@ -58,10 +65,10 @@ coverage:
 	rm ./var/.coverage*
 
 test:
-	$(docker_compose) run -e ENV=tests --rm web ./manage.py test --noinput --parallel
+	$(docker_compose) run -e ENV=tests --rm web ./manage.py test --shuffle --noinput --parallel
 
 test_nds:
-	$(docker_compose) run -e ENV=tests_nds --rm web ./manage.py test --noinput --parallel
+	$(docker_compose) run -e ENV=tests_nds --rm web ./manage.py test --shuffle --noinput --parallel
 
 test_nav:
 	casperjs test --baseurl=$(baseurl) geotrek/jstests/nav-*.js

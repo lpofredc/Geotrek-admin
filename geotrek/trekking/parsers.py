@@ -1,3 +1,5 @@
+from pathlib import PurePath
+
 import io
 import json
 import re
@@ -20,7 +22,7 @@ from geotrek.common.utils.file_infos import get_encoding_file
 from geotrek.common.models import Label, Theme
 from geotrek.common.parsers import (ApidaeBaseParser, AttachmentParserMixin,
                                     GeotrekParser, GlobalImportError, Parser,
-                                    RowImportError, ShapeParser)
+                                    RowImportError, ShapeParser, DownloadImportError)
 from geotrek.core.models import Path, Topology
 from geotrek.trekking.models import (POI, Accessibility, DifficultyLevel,
                                      OrderedTrekChild, Service, Trek,
@@ -193,20 +195,53 @@ class GeotrekTrekParser(GeotrekParser):
             geom = GEOSGeometry(json.dumps(val))
             return geom.transform(settings.SRID, clone=True)
 
+    def fetch_missing_categories_for_tour_steps(self, step):
+        # For all categories, search missing values in mapping
+        for category, route in self.url_categories.items():
+            category_mapping = self.field_options.get(category, {}).get('mapping', {})
+            category_values = step.get(category)
+            if not isinstance(category_values, list):
+                category_values = [category_values]
+            for value in category_values:
+                # If category PK is not found in mapping, fetch it from provider
+                if value is not None and value not in list(category_mapping.keys()):
+                    if self.categories_keys_api_v2.get(category):
+                        try:
+                            result = self.request_or_retry(f"{self.url}/api/v2/{route}/{int(value)}").json()
+                        except DownloadImportError:
+                            self.add_warning(f"Could not download {category} with id {value} from {self.provider}"
+                                             f" for Tour step {step.get('uuid')}")
+                            continue
+                        # Update mapping like we usually do
+                        label = result[self.categories_keys_api_v2[category]]
+                        if isinstance(result[self.categories_keys_api_v2[category]], dict):
+                            if label[settings.MODELTRANSLATION_DEFAULT_LANGUAGE]:
+                                self.field_options[category]["mapping"][value] = self.replace_mapping(label[settings.MODELTRANSLATION_DEFAULT_LANGUAGE], route)
+                        else:
+                            if label:
+                                self.field_options[category]["mapping"][value] = self.replace_mapping(label, category)
+
     def end(self):
         """Add children after all treks imported are created in database."""
-        super().end()
         self.next_url = f"{self.url}/api/v2/tour"
+        portals = self.portals_filter
         try:
             params = {
                 'in_bbox': ','.join([str(coord) for coord in self.bbox.extent]),
-                'fields': 'steps,uuid'
+                'fields': 'steps,id,uuid,published',
+                'portals': ','.join(portals) if portals else ''
             }
             response = self.request_or_retry(f"{self.next_url}", params=params)
             results = response.json()['results']
+            steps_to_download = 0
             final_children = {}
             for result in results:
-                final_children[result['uuid']] = [step['uuid'] for step in result['steps']]
+                final_children[result['uuid']] = []
+                for step in result['steps']:
+                    final_children[result['uuid']].append(step['id'])
+                    if not any(step['published'].values()):
+                        steps_to_download += 1
+            self.nb = steps_to_download
 
             for key, value in final_children.items():
                 if value:
@@ -215,18 +250,21 @@ class GeotrekTrekParser(GeotrekParser):
                         self.add_warning(_(f"Trying to retrieve children for missing trek : could not find trek with UUID {key}"))
                         return
                     order = 0
-                    for child in value:
-                        try:
-                            trek_child_instance = Trek.objects.get(eid=child)
-                        except Trek.DoesNotExist:
-                            self.add_warning(_(f"One trek has not be generated for {trek_parent_instance[0].name} : could not find trek with UUID {child}"))
-                            continue
+                    for child_id in value:
+                        response = self.request_or_retry(f"{self.url}/api/v2/trek/{child_id}")
+                        child_trek = response.json()
+                        # The Tour step might be linked to categories that are not published,
+                        # we have to retrieve the missing ones first
+                        self.fetch_missing_categories_for_tour_steps(child_trek)
+                        self.parse_row(child_trek)
+                        trek_child_instance = self.obj
                         OrderedTrekChild.objects.update_or_create(parent=trek_parent_instance[0],
                                                                   child=trek_child_instance,
                                                                   defaults={'order': order})
                         order += 1
         except Exception as e:
             self.add_warning(_(f"An error occured in children generation : {getattr(e, 'message', repr(e))}"))
+        super().end()
 
 
 class GeotrekServiceParser(GeotrekParser):
@@ -647,7 +685,7 @@ class ApidaeTrekParser(AttachmentParserMixin, ApidaeBaseTrekkingParser):
         plan = self._find_first_plan_with_supported_file_extension(val, supported_extensions)
         geom_file = self._fetch_geometry_file(plan)
 
-        ext = plan['traductionFichiers'][0]['extension']
+        ext = self._get_plan_extension(plan)
         if ext == 'gpx':
             return ApidaeTrekParser._get_geom_from_gpx(geom_file)
         elif ext == 'kml':
@@ -694,7 +732,7 @@ class ApidaeTrekParser(AttachmentParserMixin, ApidaeBaseTrekkingParser):
             val=[manager['nom']]
         )
         source = sources[0]
-        source.website = manager['siteWeb']
+        source.website = manager.get('siteWeb')
         source.save()
         return sources
 
@@ -902,13 +940,25 @@ class ApidaeTrekParser(AttachmentParserMixin, ApidaeBaseTrekkingParser):
         plans = [item for item in items if item['type'] == 'PLAN']
         if not plans:
             raise RowImportError('The trek from APIDAE has no attachment with the type "PLAN"')
-        supported_plans = [plan for plan in plans if plan['traductionFichiers'][0]['extension'] in supported_extensions]
+        supported_plans = [plan for plan in plans if
+                           ApidaeTrekParser._get_plan_extension(plan) in supported_extensions]
         if not supported_plans:
             raise RowImportError(
                 "The trek from APIDAE has no attached \"PLAN\" in a supported format. "
                 f"Supported formats are : {', '.join(supported_extensions)}"
             )
         return supported_plans[0]
+
+    @staticmethod
+    def _get_plan_extension(plan):
+        info_fichier = plan['traductionFichiers'][0]
+        extension_prop = info_fichier.get('extension')
+        if extension_prop:
+            return extension_prop
+        url_suffix = PurePath(info_fichier['url']).suffix
+        if url_suffix:
+            return url_suffix.split('.')[1]
+        return None
 
     @staticmethod
     def _get_geom_from_gpx(data):
@@ -925,6 +975,8 @@ class ApidaeTrekParser(AttachmentParserMixin, ApidaeBaseTrekkingParser):
                 geos = ApidaeTrekParser._maybe_get_linestring_from_layer(layer)
                 if geos:
                     break
+            else:
+                raise RowImportError("No LineString feature found in GPX layers tracks or routes")
             geos.transform(settings.SRID)
             return geos
 
@@ -998,13 +1050,24 @@ class ApidaeTrekParser(AttachmentParserMixin, ApidaeBaseTrekkingParser):
     def _maybe_get_linestring_from_layer(layer):
         if layer.num_feat == 0:
             return None
-        first_feature = layer[0]
-        geos = ApidaeTrekParser._convert_to_geos(first_feature.geom)
-        if geos.geom_type == 'MultiLineString':
-            geos = geos.merged
+        geoms = []
+        for feat in layer:
+            if feat.geom.num_coords == 0:
+                continue
+            geos = ApidaeTrekParser._convert_to_geos(feat.geom)
             if geos.geom_type == 'MultiLineString':
-                raise RowImportError(_("The geometry cannot be converted to a single continuous LineString feature"))
-        return geos
+                geos = geos.merged  # If possible we merge the MultiLineString into a LineString
+                if geos.geom_type == 'MultiLineString':
+                    raise RowImportError(_("Feature geometry cannot be converted to a single continuous LineString feature"))
+            geoms.append(geos)
+
+        full_geom = MultiLineString(geoms)
+        full_geom.srid = geoms[0].srid
+        full_geom = full_geom.merged  # If possible we merge the MultiLineString into a LineString
+        if full_geom.geom_type == 'MultiLineString':
+            raise RowImportError(_("Geometries from various features cannot be converted to a single continuous LineString feature"))
+
+        return full_geom
 
     @staticmethod
     def _find_matching_practice_in_mapping(activities_ids, mapping):
@@ -1095,12 +1158,19 @@ class ApidaeTrekParser(AttachmentParserMixin, ApidaeBaseTrekkingParser):
 
     @staticmethod
     def _make_duration(duration_in_minutes=None, duration_in_days=None):
-        """Returns the duration in hours. The method expects one argument or the other, not both. If both arguments have
-         non-zero values the method only considers `duration_in_minutes` and discards `duration_in_days`."""
-        if duration_in_minutes:
-            return float((Decimal(duration_in_minutes) / Decimal(60)).quantize(Decimal('.01')))
-        elif duration_in_days:
+        """Returns the duration in hours. There are 2 use cases:
+
+        1. the parsed trek is a one-day trip: only the duration in minutes is provided from Apiade.
+        2. the parsed trek is a multiple-day trip: the duration_in_days is provided. The duration_in_minutes may be provided
+          as a crude indication of how long each step is. That second value does not fit in Geotrek model.
+
+        So the duration_in_days is used if provided (and duration_in_minutes discarded), it means we are in the use case 2.
+        Otherwise the duration_in_minutes is used, it means use case 1.
+        """
+        if duration_in_days:
             return float(duration_in_days * 24)
+        elif duration_in_minutes:
+            return float((Decimal(duration_in_minutes) / Decimal(60)).quantize(Decimal('.01')))
         else:
             return None
 

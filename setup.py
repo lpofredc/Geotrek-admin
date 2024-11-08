@@ -31,11 +31,12 @@ setup(
     scripts=['manage.py'],
     install_requires=[
         'Django==4.2.*',
+        'backports-zoneinfo;python_version<"3.10"',  # not directly needed but required to make it worked with 3.10
         'mapentity',
         'chardet',
         'cairosvg',
         'cairocffi',
-        'env_file',
+        'python-dotenv',
         # pinned by requirements.txt
         'pymemcache',
         'coreschema',
