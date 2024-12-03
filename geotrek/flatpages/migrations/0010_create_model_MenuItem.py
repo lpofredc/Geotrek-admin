@@ -41,6 +41,11 @@ def get_sync_sql(field_name, missing_langs, model):
         stmt = "ALTER TABLE %s ADD COLUMN %s" % (qn(db_table), ' '.join(field_sql))
         if not f.null:
             stmt += " " + 'NOT NULL'
+        if f.default != models.fields.NOT_PROVIDED and f.default is not None:
+            default = str(f.default) 
+            if isinstance(f.default, str) and len(f.default) == 0:
+                default = "''"
+            stmt += " " + 'DEFAULT ' + default
         sql_output.append(stmt + ";")
     return sql_output
 
